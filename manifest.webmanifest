@@ -1,0 +1,18 @@
+{
+  "name": "Fretwork Trainer",
+  "short_name": "Fretwork",
+  "description": "Three-note-per-string scale practice on a real fretboard.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#121316",
+  "theme_color": "#121316",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

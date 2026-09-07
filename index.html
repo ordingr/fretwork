@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Interactive guitar fretboard for practising three-note-per-string scales, modes, pentatonics and chromatic runs.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#E5E3DC">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fretwork">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%23231F1A%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%238C9296%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M6%2018h52M6%2032h52M6%2046h52%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23B9BEC2%22%3E%3Crect%20x%3D%2220%22%20y%3D%228%22%20width%3D%222%22%20height%3D%2248%22%2F%3E%3Crect%20x%3D%2240%22%20y%3D%228%22%20width%3D%222%22%20height%3D%2248%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2231%22%20cy%3D%2218%22%20r%3D%226%22%20fill%3D%22%23D8A44F%22%2F%3E%3Ccircle%20cx%3D%2251%22%20cy%3D%2232%22%20r%3D%226%22%20fill%3D%22%233E9C88%22%2F%3E%3Ccircle%20cx%3D%2211%22%20cy%3D%2246%22%20r%3D%226%22%20fill%3D%22%2398A2AA%22%2F%3E%3C%2Fsvg%3E">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Fretwork Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&display=swap">
+
+<style>
+:root{
+  --bg:#E5E3DC; --surface:#F4F3EF; --surface-2:#EBE9E2;
+  --ink:#1E1D19; --ink-2:#4C4A43; --ink-3:#7E7B71;
+  --line:#CCC8BE; --line-2:#B6B1A4;
+  --accent:#96671F; --accent-soft:#EFE2CB; --on-accent:#FBF9F4;
+  --shadow:0 1px 2px rgba(40,34,20,.06), 0 8px 26px rgba(40,34,20,.07);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121316; --surface:#1A1C20; --surface-2:#212429;
+    --ink:#EDEBE4; --ink-2:#B2AFA6; --ink-3:#817E76;
+    --line:#2B2F35; --line-2:#3C424A;
+    --accent:#D8A44F; --accent-soft:#2A2318; --on-accent:#1A1509;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121316; --surface:#1A1C20; --surface-2:#212429;
+  --ink:#EDEBE4; --ink-2:#B2AFA6; --ink-3:#817E76;
+  --line:#2B2F35; --line-2:#3C424A;
+  --accent:#D8A44F; --accent-soft:#2A2318; --on-accent:#1A1509;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+}
+/* The instrument keeps its own materials in both themes */
+:root{
+  --board-edge:#0E0C0A; --wire:#B9BEC2; --wire-2:#7C8388; --nut:#E8E1CE; --inlay:#C9C2AE;
+  --dot-root:#D8A44F;  --dot-root-ink:#241703;
+  --dot-third:#3E9C88; --dot-third-ink:#03201A;
+  --dot-fifth:#98A2AA; --dot-fifth-ink:#0F151A;
+  --dot-tone:#8E8779;  --dot-tone-ink:#EDE7D9;
+  --ghost:#4A443B;     --ghost-ink:#6C6558;
+  --names-w:40px; --open-w:48px; --row:38px;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.page{max-width:1240px; margin:0 auto; padding:28px 22px 60px; display:flex; flex-direction:column; gap:22px}
+
+.masthead{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  padding-bottom:16px; border-bottom:1px solid var(--line)}
+.eyebrow{display:block; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin-bottom:2px}
+h1{font-family:"Instrument Serif",Georgia,serif; font-weight:400; font-size:clamp(38px,6vw,56px);
+  line-height:.95; margin:0; letter-spacing:-.01em}
+.readout{margin:0 0 5px; font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-2);
+  text-align:right; font-variant-numeric:tabular-nums}
+.readout b{color:var(--ink); font-weight:600}
+.readout .sep{color:var(--ink-3); padding:0 .45em}
+
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow)}
+.ctl-label{display:block; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); margin-bottom:7px}
+
+.controls{padding:16px 18px; display:grid; gap:18px 26px;
+  grid-template-columns:minmax(300px,1.6fr) minmax(190px,1fr) minmax(170px,1fr); align-items:start}
+.controls .wide{grid-column:1 / -1; display:grid; gap:18px 26px; grid-template-columns:repeat(3,minmax(150px,1fr))}
+@media (max-width:880px){
+  .controls{grid-template-columns:1fr}
+  .controls .wide{grid-template-columns:1fr}
+}
+
+.roots{display:flex; flex-wrap:wrap; gap:5px}
+.chip{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:500;
+  min-width:38px; padding:7px 4px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink-2);
+  transition:background .12s,color .12s,border-color .12s}
+.chip:hover{border-color:var(--accent); color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600}
+
+select{width:100%; font-family:"IBM Plex Sans",sans-serif; font-size:14px; color:var(--ink);
+  background:var(--surface-2); border:1px solid var(--line-2); border-radius:6px;
+  padding:8px 10px; cursor:pointer; appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 16px) 55%, calc(100% - 11px) 55%;
+  background-size:5px 5px,5px 5px; background-repeat:no-repeat}
+select:hover{border-color:var(--accent)}
+
+.seg{display:inline-flex; flex-wrap:wrap; border:1px solid var(--line-2); border-radius:6px;
+  overflow:hidden; background:var(--surface-2)}
+.seg button{font-family:"IBM Plex Sans",sans-serif; font-size:13px; color:var(--ink-2);
+  background:transparent; border:0; border-right:1px solid var(--line-2);
+  padding:8px 11px; cursor:pointer; white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft); color:var(--ink); font-weight:600;
+  box-shadow:inset 0 -2px 0 var(--accent)}
+
+.switches{display:flex; flex-wrap:wrap; gap:8px 16px}
+.sw{display:inline-flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink-2); cursor:pointer}
+.sw input{appearance:none; width:34px; height:19px; border-radius:10px; background:var(--line-2);
+  border:0; cursor:pointer; position:relative; transition:background .15s; flex:none}
+.sw input::after{content:""; position:absolute; top:2px; left:2px; width:15px; height:15px;
+  border-radius:50%; background:var(--surface); transition:transform .15s}
+.sw input:checked{background:var(--accent)}
+.sw input:checked::after{transform:translateX(15px)}
+.sw input:checked + span{color:var(--ink)}
+:where(button,select,input,a):focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.board-shell{display:flex; flex-direction:column; gap:8px}
+.board-scroll{overflow-x:auto; overflow-y:hidden; border-radius:10px; box-shadow:var(--shadow); scrollbar-width:thin}
+.board{min-width:1000px; background:var(--board-edge); border-radius:10px; padding:14px 16px 8px;
+  border:1px solid var(--board-edge)}
+.fb-row{display:flex; align-items:stretch}
+.board.lefty .fb-row{flex-direction:row-reverse}
+.fb-names{width:var(--names-w); flex:none; display:flex; flex-direction:column}
+.fb-names div{height:var(--row); display:flex; align-items:center; justify-content:center;
+  font-family:"IBM Plex Mono",monospace; font-size:12px; color:#C7C0AF; font-variant-numeric:tabular-nums}
+.fb-open{width:var(--open-w); flex:none; position:relative;
+  background:linear-gradient(90deg,#191613,#211D18); border-radius:4px 0 0 4px}
+.fb-neck{flex:1; position:relative; border-left:5px solid var(--nut); border-radius:0 4px 4px 0;
+  background:linear-gradient(180deg,#2B2621 0%,#211D19 45%,#262119 100%); overflow:hidden}
+.board.lefty .fb-neck{border-left:0; border-right:5px solid var(--nut); border-radius:4px 0 0 4px}
+.board.lefty .fb-open{border-radius:0 4px 4px 0}
+.grain{position:absolute; inset:0; opacity:.55; pointer-events:none;
+  background:repeating-linear-gradient(93deg, rgba(255,255,255,.03) 0 1px, transparent 1px 6px),
+             repeating-linear-gradient(88deg, rgba(0,0,0,.16) 0 1px, transparent 1px 11px)}
+.wire{position:absolute; top:0; bottom:0; width:2px; margin-left:-1px;
+  background:linear-gradient(90deg,var(--wire-2),var(--wire) 45%,#6E7478); box-shadow:0 0 3px rgba(0,0,0,.5)}
+.inlay{position:absolute; width:11px; height:11px; margin-left:-5.5px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #F0EADA, var(--inlay) 70%); opacity:.45}
+.strline{position:absolute; left:0; right:0; pointer-events:none;
+  background:linear-gradient(180deg,#D9DDE0,#8C9296 55%,#5C6165)}
+.fb-nums{display:flex; margin-top:6px}
+.board.lefty .fb-nums{flex-direction:row-reverse}
+.fb-nums .spacer{flex:none}
+.fb-nums .track{flex:1; position:relative; height:18px}
+.fnum{position:absolute; transform:translateX(-50%); font-family:"IBM Plex Mono",monospace;
+  font-size:11px; color:#6F695D; font-variant-numeric:tabular-nums}
+.fnum.mark{color:#A79F8C}
+.board.lefty .fb-neck, .board.lefty .fb-open, .board.lefty .fb-nums .track{transform:scaleX(-1)}
+.board.lefty .fnum span, .board.lefty .dot span{display:inline-block; transform:scaleX(-1)}
+
+.dot{position:absolute; width:27px; height:27px; margin:-13.5px 0 0 -13.5px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:600; letter-spacing:-.02em;
+  border:1.5px solid transparent; background:transparent; transition:transform .1s}
+.dot:hover{transform:scale(1.14); z-index:5}
+.dot.root{background:var(--dot-root); color:var(--dot-root-ink); border-color:#EFC078}
+.dot.third{background:var(--dot-third); color:var(--dot-third-ink); border-color:#5FBFA9}
+.dot.fifth{background:var(--dot-fifth); color:var(--dot-fifth-ink); border-color:#B9C2C9}
+.dot.tone{background:rgba(20,17,14,.55); color:var(--dot-tone-ink); border-color:var(--dot-tone)}
+.dot.ghost{background:transparent; color:var(--ghost-ink); border-color:var(--ghost); border-style:dashed;
+  width:20px; height:20px; margin:-10px 0 0 -10px; font-size:9.5px; font-weight:400}
+.dot.ghost:hover{border-style:solid; color:var(--dot-tone-ink)}
+.dot.is-playing{box-shadow:0 0 0 3px var(--dot-root), 0 0 16px rgba(216,164,79,.7);
+  transform:scale(1.2); z-index:6}
+.dot.open-dot{position:relative; margin:0}
+.fb-open .cell{height:var(--row); display:flex; align-items:center; justify-content:center; position:absolute; left:0; right:0}
+
+/* ---- piano: a real piano in both themes, like the neck ---- */
+.piano-shell[hidden]{display:none}
+.piano-scroll{overflow-x:auto; overflow-y:hidden; border-radius:10px; box-shadow:var(--shadow); scrollbar-width:thin}
+.piano{background:var(--board-edge); border-radius:10px; padding:9px 10px 10px; display:inline-block; min-width:100%}
+.keys{position:relative; height:92px}
+.pkey{position:absolute; top:0; padding:0 0 6px; cursor:pointer; border:0;
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600;
+  display:flex; align-items:flex-end; justify-content:center}
+.pkey.white{height:92px; width:24px; border-radius:0 0 4px 4px;
+  background:linear-gradient(180deg,#FBF9F4,#E6E2D7); color:#6B665B;
+  box-shadow:inset -1px 0 0 #C6C0B1, 0 2px 3px rgba(0,0,0,.35)}
+.pkey.black{height:57px; width:15px; border-radius:0 0 3px 3px; z-index:2; font-size:8.5px;
+  background:linear-gradient(180deg,#3A342D,#16130F); color:#9A9285;
+  box-shadow:0 3px 4px rgba(0,0,0,.55)}
+.pkey.tone{background:linear-gradient(180deg,#BEB6A6,#8E8779); color:#211E19}
+.pkey.black.tone{background:linear-gradient(180deg,#6E6759,#443E33); color:#E8E2D4}
+.pkey.fifth{background:linear-gradient(180deg,#C4CCD2,var(--dot-fifth)); color:var(--dot-fifth-ink)}
+.pkey.third{background:linear-gradient(180deg,#63C4AE,var(--dot-third)); color:var(--dot-third-ink)}
+.pkey.root{background:linear-gradient(180deg,#F2C282,var(--dot-root)); color:var(--dot-root-ink)}
+.pkey.inpos::before{content:""; position:absolute; top:9px; left:50%; margin-left:-3px;
+  width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.8}
+.pkey.is-playing{box-shadow:0 0 0 2px var(--dot-root), 0 0 15px rgba(216,164,79,.85); z-index:3}
+.piano-legend{margin:0; font-size:12px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+
+/* ---- circle of fifths ---- */
+.cof{width:100%; max-width:296px; margin:2px auto 0; display:block}
+.cof-seg{cursor:pointer}
+.cof-seg:hover{opacity:.85}
+.cof-lbl{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600;
+  pointer-events:none; text-anchor:middle; dominant-baseline:central}
+.cof-sig{font-family:"IBM Plex Mono",monospace; font-size:7.5px; pointer-events:none;
+  text-anchor:middle; dominant-baseline:central; fill:var(--ink-3)}
+.cof-key{font-family:"Instrument Serif",Georgia,serif; font-size:17px; fill:var(--ink);
+  text-anchor:middle; dominant-baseline:central; pointer-events:none}
+.cof-sub{font-family:"IBM Plex Mono",monospace; font-size:8.5px; fill:var(--ink-3);
+  text-anchor:middle; dominant-baseline:central; pointer-events:none}
+.cof-note{margin:12px 0 0; font-size:12.5px; color:var(--ink-2); text-align:center; text-wrap:pretty}
+.cof-note b{color:var(--ink); font-weight:600}
+
+.scroll-hint{margin:0; font-size:12px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+.warn{color:var(--accent)}
+
+.positions{padding:14px 18px 16px}
+.pos-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px}
+.pos-head p{margin:0; font-size:13px; color:var(--ink-3); max-width:62ch; text-wrap:pretty}
+.pos-rail{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px}
+.pos{flex:1 1 0; min-width:110px; text-align:left; cursor:pointer;
+  border:1px solid var(--line-2); border-radius:8px; background:var(--surface-2);
+  padding:9px 11px 10px; color:var(--ink-2); transition:border-color .12s, background .12s}
+.pos:hover{border-color:var(--accent)}
+.pos[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); color:var(--ink)}
+.pos .num{font-family:"Instrument Serif",Georgia,serif; font-size:26px; line-height:1; color:var(--ink)}
+.pos[aria-pressed="true"] .num{color:var(--accent)}
+.pos .from{font-family:"IBM Plex Mono",monospace; font-size:12px; margin-left:6px; color:var(--ink-2)}
+.pos .rng{display:block; margin-top:5px; font-family:"IBM Plex Mono",monospace; font-size:11px;
+  color:var(--ink-3); font-variant-numeric:tabular-nums; letter-spacing:.02em}
+
+.transport{padding:14px 18px; display:flex; align-items:center; gap:18px 24px; flex-wrap:wrap}
+.play{font-family:"IBM Plex Sans",sans-serif; font-size:15px; font-weight:600;
+  background:var(--accent); color:var(--on-accent); border:0; border-radius:8px;
+  padding:11px 20px; cursor:pointer; min-width:116px; display:inline-flex; align-items:center; gap:9px}
+.play:hover{filter:brightness(1.07)}
+.play .glyph{font-size:12px}
+.tempo{display:flex; align-items:center; gap:10px}
+.bpm{font-family:"Instrument Serif",Georgia,serif; font-size:30px; line-height:1; color:var(--ink);
+  font-variant-numeric:tabular-nums; min-width:54px}
+.bpm small{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.12em;
+  color:var(--ink-3); display:block; margin-top:1px}
+input[type="range"]{appearance:none; height:4px; border-radius:2px; background:var(--line-2); cursor:pointer}
+input[type="range"]::-webkit-slider-thumb{appearance:none; width:15px; height:15px; border-radius:50%;
+  background:var(--accent); border:2px solid var(--surface); cursor:pointer}
+input[type="range"]::-moz-range-thumb{width:13px; height:13px; border-radius:50%;
+  background:var(--accent); border:2px solid var(--surface)}
+.t-group{display:flex; flex-direction:column; gap:6px}
+
+.cards{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(262px,1fr))}
+.card{padding:16px 18px 18px}
+.card h2{font-family:"Instrument Serif",Georgia,serif; font-weight:400; font-size:21px;
+  margin:0 0 12px; letter-spacing:-.01em}
+.legend{display:flex; flex-direction:column; gap:9px; margin:0; padding:0; list-style:none}
+.legend li{display:flex; align-items:center; gap:10px; font-size:13.5px; color:var(--ink-2)}
+.swatch{width:22px; height:22px; border-radius:50%; flex:none; border:1.5px solid transparent;
+  display:flex; align-items:center; justify-content:center; font-family:"IBM Plex Mono",monospace;
+  font-size:9px; font-weight:600}
+.legend .sw-root{background:var(--dot-root); color:var(--dot-root-ink); border-color:#EFC078}
+.legend .sw-third{background:var(--dot-third); color:var(--dot-third-ink)}
+.legend .sw-fifth{background:var(--dot-fifth); color:var(--dot-fifth-ink)}
+.legend .sw-tone{background:#151210; color:var(--dot-tone-ink); border-color:var(--dot-tone)}
+.legend .sw-ghost{border-color:var(--ghost); border-style:dashed; color:var(--ghost-ink)}
+
+.shape{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:2px}
+.shape li{display:grid; grid-template-columns:52px 1fr auto; gap:10px; align-items:baseline;
+  font-family:"IBM Plex Mono",monospace; font-size:13px; padding:4px 0;
+  border-bottom:1px dashed var(--line); font-variant-numeric:tabular-nums}
+.shape li:last-child{border-bottom:0}
+.shape .st{color:var(--ink-3); font-size:11.5px}
+.shape .fr{color:var(--ink); letter-spacing:.04em}
+.shape .fg{color:var(--accent); font-size:11.5px; letter-spacing:.06em}
+
+.tips{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:11px}
+.tips li{font-size:13.5px; color:var(--ink-2); padding-left:16px; position:relative; text-wrap:pretty}
+.tips li::before{content:""; position:absolute; left:0; top:.62em; width:6px; height:1px; background:var(--accent)}
+kbd{font-family:"IBM Plex Mono",monospace; font-size:11px; background:var(--surface-2);
+  border:1px solid var(--line-2); border-bottom-width:2px; border-radius:4px; padding:1px 5px; color:var(--ink-2)}
+footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px solid var(--line); padding-top:16px}
+
+@media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div>
+      <span class="eyebrow">Three notes per string</span>
+      <h1>Fretwork</h1>
+    </div>
+    <p class="readout" id="readout"></p>
+  </header>
+
+  <section class="panel controls" aria-label="Scale setup">
+    <div>
+      <span class="ctl-label" id="rootLbl">Root</span>
+      <div class="roots" id="roots" role="group" aria-labelledby="rootLbl"></div>
+    </div>
+    <div>
+      <label class="ctl-label" for="scaleSel">Scale</label>
+      <select id="scaleSel"></select>
+    </div>
+    <div>
+      <label class="ctl-label" for="tuneSel">Tuning</label>
+      <select id="tuneSel"></select>
+    </div>
+    <div class="wide">
+      <div>
+        <span class="ctl-label" id="npsLbl">Notes per string</span>
+        <div class="seg" id="npsSeg" role="group" aria-labelledby="npsLbl"></div>
+      </div>
+      <div>
+        <span class="ctl-label" id="labLbl">Dot labels</span>
+        <div class="seg" id="labSeg" role="group" aria-labelledby="labLbl"></div>
+      </div>
+      <div>
+        <span class="ctl-label">View</span>
+        <div class="switches">
+          <label class="sw"><input type="checkbox" id="showAll" checked><span>Whole neck</span></label>
+          <label class="sw"><input type="checkbox" id="piano" checked><span>Piano</span></label>
+          <label class="sw"><input type="checkbox" id="lefty"><span>Left-handed</span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="board-shell" aria-label="Fretboard">
+    <div class="board-scroll"><div class="board" id="board"></div></div>
+    <p class="scroll-hint" id="hint">Tap any dot to hear it. Scroll sideways for the upper frets.</p>
+  </section>
+
+  <section class="piano-shell" id="pianoShell" aria-label="Keyboard">
+    <div class="piano-scroll"><div class="piano" id="pianoBoard"></div></div>
+    <p class="piano-legend">The same scale on a keyboard &mdash; filled keys share the fretboard colours, and a dot marks the notes in the position you are practising.</p>
+  </section>
+
+  <section class="panel positions" aria-label="Positions">
+    <div class="pos-head">
+      <span class="ctl-label" style="margin:0" id="posLbl">Position</span>
+      <p id="posNote"></p>
+    </div>
+    <div class="pos-rail" id="posRail" role="group" aria-labelledby="posLbl"></div>
+  </section>
+
+  <section class="panel transport" aria-label="Practice controls">
+    <button class="play" id="playBtn" aria-pressed="false"><span class="glyph" id="playGlyph">&#9654;</span><span id="playTxt">Play</span></button>
+    <div class="tempo">
+      <div class="bpm"><span id="bpmVal">72</span><small>BPM</small></div>
+      <input type="range" id="bpm" min="40" max="220" step="1" value="72" style="width:130px" aria-label="Tempo in beats per minute">
+    </div>
+    <div class="t-group">
+      <span class="ctl-label" style="margin:0" id="divLbl">Subdivision</span>
+      <div class="seg" id="divSeg" role="group" aria-labelledby="divLbl"></div>
+    </div>
+    <div class="t-group">
+      <span class="ctl-label" style="margin:0" id="dirLbl">Direction</span>
+      <div class="seg" id="dirSeg" role="group" aria-labelledby="dirLbl"></div>
+    </div>
+    <div class="switches">
+      <label class="sw"><input type="checkbox" id="loop" checked><span>Loop</span></label>
+      <label class="sw"><input type="checkbox" id="metro"><span>Click</span></label>
+    </div>
+    <div class="t-group">
+      <label class="ctl-label" style="margin:0" for="vol">Volume</label>
+      <input type="range" id="vol" min="0" max="100" step="1" value="70" style="width:96px">
+    </div>
+  </section>
+
+  <section class="cards">
+    <div class="panel card">
+      <h2>Circle of fifths</h2>
+      <svg class="cof" id="cof" viewBox="-124 -124 248 248" role="img" aria-label="Circle of fifths"></svg>
+      <p class="cof-note" id="cofNote"></p>
+    </div>
+    <div class="panel card">
+      <h2>Reading the dots</h2>
+      <ul class="legend">
+        <li><span class="swatch sw-root">1</span> Root &mdash; land on these</li>
+        <li><span class="swatch sw-third">3</span> The third &mdash; sets the flavour</li>
+        <li><span class="swatch sw-fifth">5</span> The fifth &mdash; your anchor</li>
+        <li><span class="swatch sw-tone">&#9679;</span> Other tones in this position</li>
+        <li><span class="swatch sw-ghost">&#9679;</span> Same scale, other positions</li>
+      </ul>
+    </div>
+    <div class="panel card">
+      <h2 id="shapeTitle">This shape</h2>
+      <ul class="shape" id="shapeList"></ul>
+    </div>
+    <div class="panel card">
+      <h2>How to drill it</h2>
+      <ul class="tips">
+        <li>Start at 60&ndash;72 BPM in triplets. Two clean passes before you raise the tempo, never sooner.</li>
+        <li>Say the degree out loud as you play it &mdash; the shape sticks faster when you know what note you are on.</li>
+        <li>Move dot labels to <em>Degrees</em> once the note names are automatic, then to <em>None</em>.</li>
+        <li>Shift without stopping: position 3 ascending straight into position 4 descending.</li>
+        <li><kbd>Space</kbd> play/stop &middot; <kbd>&larr;</kbd> <kbd>&rarr;</kbd> position &middot; <kbd>&uarr;</kbd> <kbd>&darr;</kbd> tempo</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $ = function(s){ return document.querySelector(s); };
+var MAXFRET = 22, ROW = 38;
+var SHARP = ["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+var LETTERS = ["C","D","E","F","G","A","B"];
+var LETTER_PC = [0,2,4,5,7,9,11];
+var DEG_BASE = {1:0,2:2,3:4,4:5,5:7,6:9,7:11};
+var INLAYS = [3,5,7,9,15,17,19,21];
+
+var ROOTS = [
+  {n:"C",pc:0,l:0},{n:"C♯",pc:1,l:0},{n:"D",pc:2,l:1},{n:"E♭",pc:3,l:2},
+  {n:"E",pc:4,l:2},{n:"F",pc:5,l:3},{n:"F♯",pc:6,l:3},{n:"G",pc:7,l:4},
+  {n:"A♭",pc:8,l:5},{n:"A",pc:9,l:5},{n:"B♭",pc:10,l:6},{n:"B",pc:11,l:6}
+];
+
+var SCALES = [
+  {id:"ionian",    name:"Ionian (major)",       g:"Major modes", deg:["1","2","3","4","5","6","7"]},
+  {id:"dorian",    name:"Dorian",               g:"Major modes", deg:["1","2","b3","4","5","6","b7"]},
+  {id:"phrygian",  name:"Phrygian",             g:"Major modes", deg:["1","b2","b3","4","5","b6","b7"]},
+  {id:"lydian",    name:"Lydian",               g:"Major modes", deg:["1","2","3","#4","5","6","7"]},
+  {id:"mixo",      name:"Mixolydian",           g:"Major modes", deg:["1","2","3","4","5","6","b7"]},
+  {id:"aeolian",   name:"Aeolian (natural minor)", g:"Major modes", deg:["1","2","b3","4","5","b6","b7"]},
+  {id:"locrian",   name:"Locrian",              g:"Major modes", deg:["1","b2","b3","4","b5","b6","b7"]},
+  {id:"harmmin",   name:"Harmonic minor",       g:"Minor & dominant", deg:["1","2","b3","4","5","b6","7"]},
+  {id:"melmin",    name:"Melodic minor",        g:"Minor & dominant", deg:["1","2","b3","4","5","6","7"]},
+  {id:"phrygdom",  name:"Phrygian dominant",    g:"Minor & dominant", deg:["1","b2","3","4","5","b6","b7"]},
+  {id:"lyddom",    name:"Lydian dominant",      g:"Minor & dominant", deg:["1","2","3","#4","5","6","b7"]},
+  {id:"altered",   name:"Altered (super locrian)", g:"Minor & dominant", deg:["1","b2","b3","b4","b5","b6","b7"]},
+  {id:"majpent",   name:"Major pentatonic",     g:"Pentatonic & blues", deg:["1","2","3","5","6"]},
+  {id:"minpent",   name:"Minor pentatonic",     g:"Pentatonic & blues", deg:["1","b3","4","5","b7"]},
+  {id:"blues",     name:"Blues (minor)",        g:"Pentatonic & blues", deg:["1","b3","4","b5","5","b7"]},
+  {id:"majblues",  name:"Blues (major)",        g:"Pentatonic & blues", deg:["1","2","b3","3","5","6"]},
+  {id:"wholetone", name:"Whole tone",           g:"Symmetric", deg:["1","2","3","#4","#5","b7"]},
+  {id:"dimhw",     name:"Diminished (half–whole)", g:"Symmetric", deg:["1","b2","b3","3","#4","5","6","b7"]},
+  {id:"dimwh",     name:"Diminished (whole–half)", g:"Symmetric", deg:["1","2","b3","4","b5","b6","6","7"]},
+  {id:"chromatic", name:"Chromatic",            g:"Symmetric", chromatic:true,
+                   deg:["1","b2","2","b3","3","4","b5","5","b6","6","b7","7"]}
+];
+
+var TUNINGS = [
+  {id:"std",    name:"Standard — E A D G B E", s:[40,45,50,55,59,64]},
+  {id:"dropd",  name:"Drop D",                     s:[38,45,50,55,59,64]},
+  {id:"eb",     name:"E♭ standard (half step down)", s:[39,44,49,54,58,63]},
+  {id:"dstd",   name:"D standard (whole step down)", s:[38,43,48,53,57,62]},
+  {id:"dadgad", name:"DADGAD",                     s:[38,45,50,55,57,62]},
+  {id:"openg",  name:"Open G — D G D G B D",  s:[38,43,50,55,59,62]},
+  {id:"opend",  name:"Open D — D A D F♯ A D", s:[38,45,50,54,57,62]},
+  {id:"7str",   name:"7-string — B E A D G B E", s:[35,40,45,50,55,59,64]}
+];
+
+/* Circle of fifths, clockwise from C at twelve o'clock */
+var FIFTHS = [
+  {pc:0,  maj:"C",  min:"Am",  sig:"—"},
+  {pc:7,  maj:"G",  min:"Em",  sig:"1♯"},
+  {pc:2,  maj:"D",  min:"Bm",  sig:"2♯"},
+  {pc:9,  maj:"A",  min:"F♯m", sig:"3♯"},
+  {pc:4,  maj:"E",  min:"C♯m", sig:"4♯"},
+  {pc:11, maj:"B",  min:"G♯m", sig:"5♯"},
+  {pc:6,  maj:"G♭", alt:"F♯", min:"E♭m", sig:"6♭"},
+  {pc:1,  maj:"D♭", alt:"C♯", min:"B♭m", sig:"5♭"},
+  {pc:8,  maj:"A♭", alt:"G♯", min:"Fm",  sig:"4♭"},
+  {pc:3,  maj:"E♭", min:"Cm",  sig:"3♭"},
+  {pc:10, maj:"B♭", min:"Gm",  sig:"2♭"},
+  {pc:5,  maj:"F",  min:"Dm",  sig:"1♭"}
+];
+
+var state = {
+  rootIdx:9, scaleId:"aeolian", tuneId:"std", nps:3, pos:0,
+  labels:"note", showAll:true, lefty:false, piano:true,
+  bpm:72, div:3, dir:"updown", loop:true, metro:false, vol:0.7, playing:false
+};
+
+/* ---------------- theory ---------------- */
+function parseDeg(l){
+  var alt = 0, i = 0;
+  while(i < l.length && (l.charAt(i) === "b" || l.charAt(i) === "#")){ alt += (l.charAt(i) === "b" ? -1 : 1); i++; }
+  var num = parseInt(l.slice(i), 10);
+  return {num:num, alt:alt, label:l, semi:((DEG_BASE[num] + alt) % 12 + 12) % 12};
+}
+function pretty(label){ return label.replace(/b/g,"♭").replace(/#/g,"♯"); }
+function root(){ return ROOTS[state.rootIdx]; }
+function scale(){ for(var i=0;i<SCALES.length;i++){ if(SCALES[i].id === state.scaleId) return SCALES[i]; } }
+function tuning(){ for(var i=0;i<TUNINGS.length;i++){ if(TUNINGS[i].id === state.tuneId) return TUNINGS[i]; } }
+function degList(){ return scale().deg.map(parseDeg); }
+function spell(deg){
+  var r = root();
+  var li = (r.l + deg.num - 1) % 7;
+  var natural = LETTER_PC[li];
+  var target = (r.pc + deg.semi) % 12;
+  var acc = ((target - natural + 18) % 12) - 6;
+  if(Math.abs(acc) > 2) return SHARP[target];
+  var s = LETTERS[li];
+  while(acc > 0){ s += "♯"; acc--; }
+  while(acc < 0){ s += "♭"; acc++; }
+  return s;
+}
+function defaultNps(sc){
+  if(sc.chromatic) return 4;
+  var n = sc.deg.length;
+  if(n === 5) return 2;
+  if(n === 8) return 4;
+  return 3;
+}
+function fingersFor(fs){
+  var rel = fs.map(function(f){ return f - fs[0]; });
+  var span = rel[rel.length - 1];
+  var none = fs.map(function(){ return 0; });
+  if(span > 5) return none;
+  if(fs.length === 2) return [1, span >= 3 ? 4 : (span === 2 ? 3 : 2)];
+  if(fs.length === 3){
+    var a = rel[1], b = rel[2] - rel[1];
+    if(a === 1) return [1,2,4];
+    if(b === 1) return [1,3,4];
+    return [1,2,4];
+  }
+  if(span > 3) return none;
+  return rel.map(function(r){ return Math.min(4, r + 1); });
+}
+
+/* Pitches chain upward through the scale, so every note is exact.
+   Only the octave of the whole shape is nudged to fit the neck. */
+function buildShape(pos){
+  var t = tuning(), open = t.s, S = open.length, nps = state.nps, sc = scale();
+  var degs = degList(), iv = degs.map(function(d){ return d.semi; }), n = iv.length;
+  var r = root(), notes = [], i, s, k;
+
+  if(sc.chromatic){
+    var start = Math.max(0, Math.min(pos, MAXFRET - nps + 1));
+    for(s = 0; s < S; s++){
+      for(k = 0; k < nps; k++){
+        var f = start + k;
+        if(f > MAXFRET) continue;
+        notes.push({s:s, f:f, midi:open[s] + f});
+      }
+    }
+  } else {
+    var steps = [];
+    for(i = 0; i < n; i++) steps.push(((iv[(i + 1) % n] - iv[i]) + 12) % 12);
+    var targetPc = (r.pc + iv[pos]) % 12;
+    var f0 = 0;
+    while((((open[0] + f0) % 12) + 12) % 12 !== targetPc) f0++;
+    var midi = open[0] + f0, chain = [], si = pos;
+    for(i = 0; i < S * nps; i++){ chain.push(midi); midi += steps[si % n]; si++; }
+    var shifts = [0, 12, -12, 24, -24], best = 0, bestBad = 1e9;
+    for(var j = 0; j < shifts.length; j++){
+      var bad = 0;
+      for(i = 0; i < chain.length; i++){
+        var ff = chain[i] + shifts[j] - open[Math.floor(i / nps)];
+        if(ff < 0 || ff > MAXFRET) bad++;
+      }
+      if(bad < bestBad){ bestBad = bad; best = shifts[j]; }
+      if(bad === 0) break;
+    }
+    for(i = 0; i < chain.length; i++){
+      var st = Math.floor(i / nps), m = chain[i] + best, fr = m - open[st];
+      if(fr < 0 || fr > MAXFRET) continue;
+      notes.push({s:st, f:fr, midi:m});
+    }
+  }
+
+  var byString = {};
+  notes.forEach(function(nt, idx){
+    nt.order = idx;
+    nt.pc = ((nt.midi % 12) + 12) % 12;
+    var rel = (((nt.pc - r.pc) % 12) + 12) % 12;
+    nt.degIdx = iv.indexOf(rel);
+    nt.deg = nt.degIdx >= 0 ? degs[nt.degIdx] : null;
+    if(!byString[nt.s]) byString[nt.s] = [];
+    byString[nt.s].push(nt);
+  });
+  Object.keys(byString).forEach(function(key){
+    var g = byString[key];
+    var fg = fingersFor(g.map(function(x){ return x.f; }));
+    g.forEach(function(nt, i2){ nt.finger = fg[i2]; });
+  });
+
+  var frets = notes.map(function(x){ return x.f; });
+  return {
+    notes:notes, byString:byString,
+    min: frets.length ? Math.min.apply(null, frets) : 0,
+    max: frets.length ? Math.max.apply(null, frets) : 0,
+    complete: notes.length === S * nps
+  };
+}
+function tierOf(nt){
+  if(!nt.deg) return "tone";
+  if(nt.deg.num === 1 && nt.deg.alt === 0) return "root";
+  if(nt.deg.num === 3) return "third";
+  if(nt.deg.num === 5) return "fifth";
+  return "tone";
+}
+function labelFor(nt, ghost){
+  if(state.labels === "none") return "";
+  if(state.labels === "finger") return (!ghost && nt.finger) ? String(nt.finger) : "";
+  if(state.labels === "degree") return nt.deg ? pretty(nt.deg.label) : "";
+  return nt.deg ? spell(nt.deg) : SHARP[nt.pc];
+}
+
+/* -------- fret geometry: true scale-length taper, eased for legibility -------- */
+var TAPER = 0.45, FP = (function(){
+  var out = [0], full = 1 - Math.pow(2, -MAXFRET / 12);
+  for(var n = 1; n <= MAXFRET; n++){
+    var tru = (1 - Math.pow(2, -n / 12)) / full, eq = n / MAXFRET;
+    out.push(eq + (tru - eq) * TAPER);
+  }
+  return out;
+})();
+function center(n){ return ((FP[n - 1] + FP[n]) / 2) * 100; }
+
+/* ---------------- render ---------------- */
+var shape = null, posShapes = [];
+function posCount(){
+  var sc = scale();
+  if(sc.chromatic) return Math.min(13, MAXFRET - state.nps + 2);
+  return sc.deg.length;
+}
+function render(){
+  if(state.pos >= posCount()) state.pos = 0;
+  posShapes = [];
+  for(var p = 0; p < posCount(); p++) posShapes.push(buildShape(p));
+  shape = posShapes[state.pos];
+  drawBoard(); drawPiano(); drawCircle(); drawPositions(); drawShapeCard(); drawReadout();
+  if(state.playing) buildSequence();
+}
+
+/* ---------------- piano ---------------- */
+var WHITE_PC = [0,2,4,5,7,9,11];
+function drawPiano(){
+  var shell = $("#pianoShell");
+  shell.hidden = !state.piano;
+  if(!state.piano) return;
+
+  var open = tuning().s, r = root(), degs = degList();
+  var iv = degs.map(function(d){ return d.semi; });
+  var lo = Math.min.apply(null, open);
+  var start = Math.floor(lo / 12) * 12;
+  var shapeMax = shape.notes.length ? Math.max.apply(null, shape.notes.map(function(n){ return n.midi; })) : start;
+  var end = Math.max(start + 60, Math.ceil((shapeMax + 1) / 12) * 12);
+  var inPos = {};
+  shape.notes.forEach(function(nt){ inPos[nt.midi] = true; });
+
+  var W = 24, BW = 15, whites = 0, html = "", m, x = 0;
+  for(m = start; m <= end; m++) if(WHITE_PC.indexOf(m % 12) >= 0) whites++;
+
+  for(m = start; m <= end; m++){
+    var pc = ((m % 12) + 12) % 12;
+    var isWhite = WHITE_PC.indexOf(pc) >= 0;
+    var rel = (((pc - r.pc) % 12) + 12) % 12;
+    var di = iv.indexOf(rel);
+    var deg = di >= 0 ? degs[di] : null;
+    var cls = "pkey " + (isWhite ? "white" : "black");
+    if(deg) cls += " " + tierOf({deg:deg});
+    if(inPos[m]) cls += " inpos";
+    var lbl = "";
+    if(state.labels === "degree") lbl = deg ? pretty(deg.label) : "";
+    else if(state.labels !== "none") lbl = deg ? spell(deg) : (isWhite ? SHARP[pc] : "");
+    var nm = deg ? spell(deg) : SHARP[pc];
+    var oct = Math.floor(m / 12) - 1;
+    var title = nm + oct + (deg ? " · degree " + deg.label : " · outside the scale");
+    var left = isWhite ? x : (x - BW / 2);
+    html += '<button class="' + cls + '" style="left:' + left + 'px" data-midi="' + m +
+            '" title="' + title + '" aria-label="' + title + '">' + lbl + "</button>";
+    if(isWhite) x += W;
+  }
+  $("#pianoBoard").innerHTML = '<div class="keys" style="width:' + (whites * W) + 'px">' + html + "</div>";
+}
+
+/* ---------------- circle of fifths ---------------- */
+function arcPath(r0, r1, a0, a1){
+  var d2r = Math.PI / 180;
+  function pt(r, a){ return [(r * Math.cos(a * d2r)).toFixed(2), (r * Math.sin(a * d2r)).toFixed(2)]; }
+  var p1 = pt(r1, a0), p2 = pt(r1, a1), p3 = pt(r0, a1), p4 = pt(r0, a0);
+  return "M" + p1 + "A" + r1 + "," + r1 + " 0 0 1 " + p2 + "L" + p3 +
+         "A" + r0 + "," + r0 + " 0 0 0 " + p4 + "Z";
+}
+function scalePcs(){
+  var r = root();
+  return degList().map(function(d){ return (r.pc + d.semi) % 12; });
+}
+function circleArc(pcs){
+  var idx = pcs.map(function(pc){
+    for(var i = 0; i < 12; i++){ if(FIFTHS[i].pc === pc) return i; }
+    return -1;
+  }).sort(function(a, b){ return a - b; });
+  if(idx.length < 2) return {span:idx.length, contiguous:true, from:idx[0], to:idx[0]};
+  var gap = -1, gapAt = 0;
+  for(var i = 0; i < idx.length; i++){
+    var nxt = idx[(i + 1) % idx.length];
+    var g = ((nxt - idx[i]) + 12) % 12;
+    if(g > gap){ gap = g; gapAt = i; }
+  }
+  return {
+    span: 12 - gap + 1 > 12 ? 12 : (12 - gap) + 1,
+    contiguous: (12 - gap) + 1 === idx.length,
+    from: idx[(gapAt + 1) % idx.length],
+    to: idx[gapAt]
+  };
+}
+function parentMajor(pcs){
+  var want = pcs.slice().sort(function(a, b){ return a - b; }).join(",");
+  if(pcs.length !== 7) return -1;
+  for(var k = 0; k < 12; k++){
+    var maj = [0,2,4,5,7,9,11].map(function(x){ return (x + k) % 12; }).sort(function(a, b){ return a - b; });
+    if(maj.join(",") === want) return k;
+  }
+  return -1;
+}
+function drawCircle(){
+  var r = root(), sc = scale(), degs = degList();
+  var pcs = scalePcs(), inScale = {};
+  pcs.forEach(function(pc, i){ inScale[pc] = degs[i]; });
+
+  var TIER_FILL = {root:"var(--dot-root)", third:"var(--dot-third)", fifth:"var(--dot-fifth)", tone:"var(--dot-tone)"};
+  var TIER_INK  = {root:"var(--dot-root-ink)", third:"var(--dot-third-ink)", fifth:"var(--dot-fifth-ink)", tone:"#1B1913"};
+  var svg = "", i;
+
+  for(i = 0; i < 12; i++){
+    var seg = FIFTHS[i];
+    var a0 = i * 30 - 105, a1 = a0 + 30, mid = a0 + 15;
+    var d = inScale[seg.pc];
+    var tier = d ? tierOf({deg:d}) : null;
+    var fill = tier ? TIER_FILL[tier] : "var(--surface-2)";
+    var ink = tier ? TIER_INK[tier] : "var(--ink-3)";
+    var isRoot = seg.pc === r.pc;
+
+    var minPc = (seg.pc + 9) % 12;
+    var dm = inScale[minPc];
+    var tierM = dm ? tierOf({deg:dm}) : null;
+    var fillM = tierM ? TIER_FILL[tierM] : "var(--surface)";
+    var inkM = tierM ? TIER_INK[tierM] : "var(--ink-3)";
+
+    var rad = Math.PI / 180 * mid;
+    var ox = (98 * Math.cos(rad)).toFixed(1), oy = (98 * Math.sin(rad)).toFixed(1);
+    var sx = (117 * Math.cos(rad)).toFixed(1), sy = (117 * Math.sin(rad)).toFixed(1);
+    var ix = (63 * Math.cos(rad)).toFixed(1), iy = (63 * Math.sin(rad)).toFixed(1);
+
+    svg += '<path class="cof-seg" d="' + arcPath(82, 112, a0, a1) + '" fill="' + fill +
+           '" stroke="var(--line)" stroke-width="1" data-pc="' + seg.pc + '" data-ring="maj"></path>';
+    svg += '<path class="cof-seg" d="' + arcPath(46, 82, a0, a1) + '" fill="' + fillM +
+           '" stroke="var(--line)" stroke-width="1" data-pc="' + minPc + '" data-ring="min"></path>';
+    if(isRoot){
+      svg += '<path d="' + arcPath(82, 112, a0, a1) + '" fill="none" stroke="var(--accent)" stroke-width="2.5"></path>';
+    }
+    if(minPc === r.pc){
+      svg += '<path d="' + arcPath(46, 82, a0, a1) + '" fill="none" stroke="var(--accent)" stroke-width="2.5"></path>';
+    }
+    svg += '<text class="cof-lbl" x="' + ox + '" y="' + oy + '" fill="' + ink + '"' +
+           (seg.alt ? ' style="font-size:8px"' : "") + ">" +
+           (seg.alt ? seg.maj + "/" + seg.alt : seg.maj) + "</text>";
+    svg += '<text class="cof-sig" x="' + sx + '" y="' + sy + '">' + seg.sig + "</text>";
+    svg += '<text class="cof-lbl" x="' + ix + '" y="' + iy + '" fill="' + inkM +
+           '" style="font-size:9px">' + seg.min + "</text>";
+  }
+  svg += '<circle r="45" fill="var(--surface)" stroke="var(--line)"></circle>';
+  svg += '<text class="cof-key" y="-8">' + spell(degs[0]) + "</text>";
+  svg += '<text class="cof-sub" y="10">' + sc.name.replace(/ \(.*\)/, "") + "</text>";
+  $("#cof").innerHTML = svg;
+
+  /* name a wedge the way this key actually spells it */
+  function spellPc(pc){
+    if(inScale[pc]) return spell(inScale[pc]);
+    for(var i2 = 0; i2 < 12; i2++){ if(FIFTHS[i2].pc === pc) return FIFTHS[i2].maj; }
+    return SHARP[pc];
+  }
+  var arc = circleArc(pcs), pm = parentMajor(pcs), note;
+  if(sc.chromatic){
+    note = "All twelve. The chromatic scale fills the whole circle &mdash; there is no key to be outside of.";
+  } else if(arc.contiguous){
+    note = "<b>" + pcs.length + " neighbours</b> on the circle, " + spellPc(FIFTHS[arc.from].pc) +
+           " round to " + spellPc(FIFTHS[arc.to].pc) + ".";
+    if(pm >= 0){
+      /* count accidentals in this key's own spelling — exact, and it keeps
+         C♯ major from being reported as D♭ major */
+      var spelled = degs.map(function(d){ return spell(d); });
+      var sharps = spelled.filter(function(n){ return n.indexOf("♯") >= 0; }).length;
+      var flats  = spelled.filter(function(n){ return n.indexOf("♭") >= 0; }).length;
+      var sigTxt = sharps ? sharps + (sharps === 1 ? " sharp" : " sharps")
+                 : flats  ? flats  + (flats  === 1 ? " flat"  : " flats")
+                 : "no sharps or flats";
+      note += " Same key signature as <b>" + spellPc(pm) + " major</b> &mdash; " + sigTxt + ".";
+    }
+  } else {
+    note = "These notes <b>do not sit in one arc</b> &mdash; the gaps are why " +
+           sc.name.replace(/ \(.*\)/, "") + " sounds outside the key.";
+  }
+  $("#cofNote").innerHTML = note + " Click a ring to jump key.";
+}
+
+function drawBoard(){
+  var t = tuning(), open = t.s, S = open.length, r = root();
+  var degs = degList(), iv = degs.map(function(d){ return d.semi; });
+  var inPos = {};
+  shape.notes.forEach(function(nt){ inPos[nt.s + ":" + nt.f] = nt; });
+
+  var h = S * ROW, names = "", openCol = "", neck = "", nums = "", row, s, n, f;
+
+  for(row = 0; row < S; row++){
+    s = S - 1 - row;
+    names += "<div>" + SHARP[((open[s] % 12) + 12) % 12] + "</div>";
+  }
+  for(row = 0; row < S; row++){
+    s = S - 1 - row;
+    var px = 3.2 - (s / Math.max(1, S - 1)) * 2.2;
+    var top = (row + 0.5) * ROW - px / 2;
+    var line = '<div class="strline" style="top:' + top.toFixed(2) + "px;height:" + px.toFixed(2) + 'px"></div>';
+    neck += line; openCol += line;
+  }
+  for(n = 1; n <= MAXFRET; n++){
+    neck += '<div class="wire" style="left:' + (FP[n] * 100).toFixed(3) + '%"></div>';
+    if(INLAYS.indexOf(n) >= 0){
+      neck += '<div class="inlay" style="left:' + center(n).toFixed(3) + "%;top:" + (h / 2 - 5.5) + 'px"></div>';
+    }
+    if(n === 12){
+      neck += '<div class="inlay" style="left:' + center(n).toFixed(3) + "%;top:" + (h * 0.25 - 5.5) + 'px"></div>';
+      neck += '<div class="inlay" style="left:' + center(n).toFixed(3) + "%;top:" + (h * 0.75 - 5.5) + 'px"></div>';
+    }
+    var mark = (INLAYS.indexOf(n) >= 0 || n === 12) ? " mark" : "";
+    nums += '<span class="fnum' + mark + '" style="left:' + center(n).toFixed(3) + '%"><span>' + n + "</span></span>";
+  }
+
+  for(row = 0; row < S; row++){
+    s = S - 1 - row;
+    var cy = (row + 0.5) * ROW;
+    for(f = 0; f <= MAXFRET; f++){
+      var pc = (((open[s] + f) % 12) + 12) % 12;
+      var rel = (((pc - r.pc) % 12) + 12) % 12;
+      var di = iv.indexOf(rel);
+      var hit = inPos[s + ":" + f];
+      if(!hit && (di < 0 || !state.showAll)) continue;
+      var nt = hit || {s:s, f:f, midi:open[s] + f, pc:pc, degIdx:di, deg:degs[di], finger:0, order:-1};
+      var cls = hit ? "dot " + tierOf(nt) : "dot ghost";
+      var lbl = labelFor(nt, !hit);
+      var title = (nt.deg ? spell(nt.deg) + " · degree " + nt.deg.label : SHARP[pc]) +
+                  " · string " + (S - s) + ", fret " + f;
+      var attrs = ' data-midi="' + nt.midi + '" data-idx="' + (hit ? nt.order : -1) +
+                  '" title="' + title + '" aria-label="' + title + '"';
+      if(f === 0){
+        openCol += '<div class="cell" style="top:' + (row * ROW) + 'px"><button class="' + cls +
+                   ' open-dot"' + attrs + "><span>" + lbl + "</span></button></div>";
+      } else {
+        neck += '<button class="' + cls + '" style="left:' + center(f).toFixed(3) + "%;top:" + cy +
+                'px"' + attrs + "><span>" + lbl + "</span></button>";
+      }
+    }
+  }
+
+  var board = $("#board");
+  board.className = "board" + (state.lefty ? " lefty" : "");
+  board.innerHTML =
+    '<div class="fb-row" style="height:' + h + 'px">' +
+      '<div class="fb-names">' + names + "</div>" +
+      '<div class="fb-open">' + openCol + "</div>" +
+      '<div class="fb-neck"><div class="grain"></div>' + neck + "</div>" +
+    "</div>" +
+    '<div class="fb-nums">' +
+      '<div class="spacer" style="width:var(--names-w)"></div>' +
+      '<div class="spacer" style="width:var(--open-w)"></div>' +
+      '<div class="track">' + nums + "</div>" +
+    "</div>";
+
+  $("#hint").innerHTML = shape.complete
+    ? "Tap any dot to hear it. Scroll sideways for the upper frets."
+    : '<span class="warn">This position runs past fret ' + MAXFRET + " &mdash; notes off the end of the neck are hidden.</span>";
+}
+
+function drawPositions(){
+  var sc = scale(), degs = degList(), html = "", p;
+  for(p = 0; p < posCount(); p++){
+    var sh = posShapes[p], sel = (p === state.pos), num, from;
+    if(sc.chromatic){ num = p; from = "start fret"; }
+    else { num = p + 1; from = spell(degs[p]) + " (" + pretty(degs[p].label) + ")"; }
+    html += '<button class="pos" data-pos="' + p + '" aria-pressed="' + sel + '">' +
+              '<span class="num">' + num + '</span><span class="from">' + from + "</span>" +
+              '<span class="rng">frets ' + sh.min + "–" + sh.max + "</span></button>";
+  }
+  $("#posRail").innerHTML = html;
+  $("#posNote").textContent = sc.chromatic
+    ? "One finger per fret, the same window on every string. Move it up a fret each time round and let the stretch do the work."
+    : "Each position starts on the next degree of the scale and climbs the neck. Run one up and the next one down without stopping.";
+}
+
+function drawShapeCard(){
+  var t = tuning(), S = t.s.length, html = "", s;
+  for(s = 0; s < S; s++){
+    var g = shape.byString[s] || [];
+    var frets = g.map(function(x){ return x.f; }).join(" · ");
+    var fg = (g.length && g[0].finger) ? g.map(function(x){ return x.finger; }).join("–") : "—";
+    html += "<li><span class=\"st\">" + (S - s) + " " + SHARP[((t.s[s] % 12) + 12) % 12] + "</span>" +
+            "<span class=\"fr\">" + (frets || "—") + "</span><span class=\"fg\">" + fg + "</span></li>";
+  }
+  $("#shapeList").innerHTML = html;
+  $("#shapeTitle").textContent = (scale().chromatic ? "Fret " + state.pos : "Position " + (state.pos + 1)) + " · low to high";
+}
+
+function drawReadout(){
+  var sc = scale(), degs = degList();
+  var where = sc.chromatic ? "Fret " + state.pos : "Position " + (state.pos + 1);
+  $("#readout").innerHTML =
+    "<b>" + spell(degs[0]) + " " + sc.name + '</b><span class="sep">/</span>' +
+    state.nps + ' per string<span class="sep">/</span>' + where +
+    '<span class="sep">/</span>frets ' + shape.min + "–" + shape.max;
+}
+
+/* ---------------- audio ---------------- */
+var actx = null, master = null, bufs = {};
+function ac(){
+  if(!actx){
+    var C = window.AudioContext || window.webkitAudioContext;
+    if(!C) return null;
+    actx = new C();
+    master = actx.createGain();
+    master.gain.value = state.vol;
+    master.connect(actx.destination);
+  }
+  if(actx.state === "suspended") actx.resume();
+  return actx;
+}
+function pluck(midi){
+  if(bufs[midi]) return bufs[midi];
+  var c = ac(); if(!c) return null;
+  var sr = c.sampleRate, freq = 440 * Math.pow(2, (midi - 69) / 12);
+  var N = Math.max(2, Math.round(sr / freq));
+  var dur = Math.min(2.4, 1.1 + 60 / freq);
+  var len = Math.floor(sr * dur);
+  var buf = c.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  var ring = new Float32Array(N), prev = 0, i, j, k;
+  for(i = 0; i < N; i++){ var w = Math.random() * 2 - 1; prev = prev * 0.55 + w * 0.45; ring[i] = prev; }
+  var damp = 0.9955 - Math.min(0.004, freq / 200000);
+  for(j = 0; j < len; j++){
+    var idx = j % N, cur = ring[idx], nxt = ring[(idx + 1) % N];
+    d[j] = cur;
+    ring[idx] = (cur + nxt) * 0.5 * damp;
+  }
+  var tail = Math.floor(sr * 0.06);
+  for(k = 0; k < tail; k++) d[len - 1 - k] *= k / tail;
+  bufs[midi] = buf;
+  return buf;
+}
+function playNote(midi, when, gain){
+  var c = ac(); if(!c) return;
+  var b = pluck(midi); if(!b) return;
+  var src = c.createBufferSource(); src.buffer = b;
+  var g = c.createGain(); g.gain.value = (gain === undefined ? 0.85 : gain);
+  var lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5200;
+  src.connect(lp); lp.connect(g); g.connect(master);
+  src.start(when || c.currentTime);
+}
+/* struck-string voice for the keyboard, so the two instruments stay distinguishable */
+function playTone(midi, when, gain){
+  var c = ac(); if(!c) return;
+  var t0 = when || c.currentTime;
+  var f = 440 * Math.pow(2, (midi - 69) / 12);
+  var g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain === undefined ? 0.5 : gain, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.9);
+  g.connect(master);
+  [[1, 1], [2, 0.4], [3, 0.16], [4, 0.07]].forEach(function(p){
+    var o = c.createOscillator(); o.type = "sine"; o.frequency.value = f * p[0];
+    var og = c.createGain(); og.gain.value = p[1];
+    o.connect(og); og.connect(g);
+    o.start(t0); o.stop(t0 + 2);
+  });
+}
+function click(when, strong){
+  var c = ac(); if(!c) return;
+  var o = c.createOscillator(), g = c.createGain();
+  o.type = "square"; o.frequency.value = strong ? 1600 : 1100;
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(strong ? 0.22 : 0.12, when + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.05);
+  o.connect(g); g.connect(master);
+  o.start(when); o.stop(when + 0.07);
+}
+
+/* ---------------- sequencer ---------------- */
+var seq = [], step = 0, nextTime = 0, timer = null, visQ = [], lastLit = [], endAt = null;
+function buildSequence(){
+  var up = shape.notes.slice();
+  if(state.dir === "up") seq = up;
+  else if(state.dir === "down") seq = up.slice().reverse();
+  else seq = up.concat(up.slice(1, up.length - 1).reverse());
+  if(step >= seq.length) step = 0;
+}
+function startPlay(){
+  if(!ac()) return;
+  buildSequence();
+  if(!seq.length) return;
+  state.playing = true; step = 0; visQ = []; endAt = null;
+  nextTime = actx.currentTime + 0.08;
+  timer = setInterval(sched, 25);
+  requestAnimationFrame(paint);
+  $("#playBtn").setAttribute("aria-pressed", "true");
+  $("#playGlyph").innerHTML = "&#9632;";
+  $("#playTxt").textContent = "Stop";
+}
+function stopPlay(){
+  state.playing = false;
+  if(timer){ clearInterval(timer); timer = null; }
+  visQ = [];
+  lastLit.forEach(function(el){ el.classList.remove("is-playing"); });
+  lastLit = [];
+  $("#playBtn").setAttribute("aria-pressed", "false");
+  $("#playGlyph").innerHTML = "&#9654;";
+  $("#playTxt").textContent = "Play";
+}
+function sched(){
+  if(!state.playing || !actx) return;
+  var now = actx.currentTime;
+  if(endAt !== null && now > endAt){ stopPlay(); return; }
+  while(endAt === null && nextTime < now + 0.15){
+    var nt = seq[step];
+    playNote(nt.midi, nextTime, 0.9);
+    if(state.metro && step % state.div === 0) click(nextTime, step === 0);
+    visQ.push({i:step, t:nextTime});
+    nextTime += (60 / state.bpm) / state.div;
+    step++;
+    if(step >= seq.length){
+      if(state.loop) step = 0;
+      else { endAt = nextTime + 0.6; break; }
+    }
+  }
+}
+function paint(){
+  if(!state.playing) return;
+  var now = actx ? actx.currentTime : 0, cur = null;
+  while(visQ.length && visQ[0].t <= now) cur = visQ.shift();
+  if(cur){
+    var nt = seq[cur.i];
+    lastLit.forEach(function(el){ el.classList.remove("is-playing"); });
+    lastLit = [];
+    [document.querySelector('.dot[data-idx="' + nt.order + '"]'),
+     document.querySelector('.pkey[data-midi="' + nt.midi + '"]')].forEach(function(el){
+      if(el){ el.classList.add("is-playing"); lastLit.push(el); }
+    });
+  }
+  requestAnimationFrame(paint);
+}
+
+/* ---------------- controls ---------------- */
+function seg(el, items, current, set){
+  el.innerHTML = items.map(function(it){
+    return '<button data-v="' + it.v + '" aria-pressed="' + (current === it.v) + '">' + it.t + "</button>";
+  }).join("");
+  el.onclick = function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    var raw = b.getAttribute("data-v");
+    var v = (raw !== "" && !isNaN(Number(raw))) ? Number(raw) : raw;
+    Array.prototype.forEach.call(el.children, function(c){
+      c.setAttribute("aria-pressed", String(c.getAttribute("data-v") === raw));
+    });
+    set(v);
+  };
+}
+function buildNps(){
+  var sc = scale();
+  var opts = sc.chromatic ? [3,4,5,6] : [2,3,4];
+  seg($("#npsSeg"), opts.map(function(v){ return {v:v, t:v + " notes"}; }), state.nps, function(v){
+    state.nps = v; state.pos = 0; step = 0; render();
+  });
+}
+function setBpm(v){
+  state.bpm = Math.max(40, Math.min(220, v));
+  $("#bpm").value = state.bpm;
+  $("#bpmVal").textContent = state.bpm;
+}
+function buildControls(){
+  $("#roots").innerHTML = ROOTS.map(function(r, i){
+    return '<button class="chip" data-i="' + i + '" aria-pressed="' + (i === state.rootIdx) + '">' + r.n + "</button>";
+  }).join("");
+  $("#roots").onclick = function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    state.rootIdx = Number(b.getAttribute("data-i"));
+    Array.prototype.forEach.call(this.children, function(c){
+      c.setAttribute("aria-pressed", String(Number(c.getAttribute("data-i")) === state.rootIdx));
+    });
+    render();
+  };
+
+  var groups = [];
+  SCALES.forEach(function(s){ if(groups.indexOf(s.g) < 0) groups.push(s.g); });
+  $("#scaleSel").innerHTML = groups.map(function(g){
+    return '<optgroup label="' + g + '">' + SCALES.filter(function(s){ return s.g === g; }).map(function(s){
+      return '<option value="' + s.id + '"' + (s.id === state.scaleId ? " selected" : "") + ">" + s.name + "</option>";
+    }).join("") + "</optgroup>";
+  }).join("");
+  $("#scaleSel").onchange = function(){
+    var wasChrom = scale().chromatic;
+    state.scaleId = this.value;
+    var sc = scale();
+    state.nps = defaultNps(sc);
+    state.pos = 0; step = 0;
+    if(sc.chromatic){ state.showAll = false; $("#showAll").checked = false; }
+    else if(wasChrom){ state.showAll = true; $("#showAll").checked = true; }
+    buildNps();
+    render();
+  };
+
+  $("#tuneSel").innerHTML = TUNINGS.map(function(t){
+    return '<option value="' + t.id + '"' + (t.id === state.tuneId ? " selected" : "") + ">" + t.name + "</option>";
+  }).join("");
+  $("#tuneSel").onchange = function(){ state.tuneId = this.value; state.pos = 0; step = 0; render(); };
+
+  buildNps();
+
+  seg($("#labSeg"),
+    [{v:"note",t:"Notes"},{v:"degree",t:"Degrees"},{v:"finger",t:"Fingers"},{v:"none",t:"None"}],
+    state.labels, function(v){ state.labels = v; render(); });
+
+  seg($("#divSeg"),
+    [{v:1,t:"1/4"},{v:2,t:"1/8"},{v:3,t:"Triplets"},{v:4,t:"1/16"}],
+    state.div, function(v){ state.div = v; });
+
+  seg($("#dirSeg"),
+    [{v:"up",t:"Up"},{v:"down",t:"Down"},{v:"updown",t:"Up &amp; down"}],
+    state.dir, function(v){ state.dir = v; if(state.playing) buildSequence(); });
+
+  $("#showAll").onchange = function(){ state.showAll = this.checked; render(); };
+  $("#piano").onchange = function(){ state.piano = this.checked; drawPiano(); };
+  $("#lefty").onchange = function(){ state.lefty = this.checked; render(); };
+  $("#loop").onchange = function(){ state.loop = this.checked; };
+  $("#metro").onchange = function(){ state.metro = this.checked; };
+  $("#vol").oninput = function(){ state.vol = this.value / 100; if(master) master.gain.value = state.vol; };
+  $("#bpm").oninput = function(){ state.bpm = Number(this.value); $("#bpmVal").textContent = state.bpm; };
+  setBpm(state.bpm);
+
+  $("#posRail").addEventListener("click", function(e){
+    var b = e.target.closest(".pos"); if(!b) return;
+    state.pos = Number(b.getAttribute("data-pos"));
+    step = 0;
+    render();
+  });
+  $("#board").addEventListener("click", function(e){
+    var b = e.target.closest(".dot"); if(!b) return;
+    playNote(Number(b.getAttribute("data-midi")));
+  });
+  $("#pianoBoard").addEventListener("click", function(e){
+    var k = e.target.closest(".pkey"); if(!k) return;
+    playTone(Number(k.getAttribute("data-midi")));
+  });
+  $("#cof").addEventListener("click", function(e){
+    var seg = e.target.closest(".cof-seg"); if(!seg) return;
+    state.rootIdx = Number(seg.getAttribute("data-pc"));
+    if(seg.getAttribute("data-ring") === "min"){
+      state.scaleId = "aeolian";
+      $("#scaleSel").value = "aeolian";
+      state.nps = defaultNps(scale());
+      buildNps();
+    }
+    state.pos = 0; step = 0;
+    Array.prototype.forEach.call($("#roots").children, function(c){
+      c.setAttribute("aria-pressed", String(Number(c.getAttribute("data-i")) === state.rootIdx));
+    });
+    render();
+  });
+  $("#playBtn").onclick = function(){ if(state.playing) stopPlay(); else startPlay(); };
+
+  document.addEventListener("keydown", function(e){
+    var tg = e.target;
+    if(tg && tg.tagName && /INPUT|SELECT|TEXTAREA/.test(tg.tagName)) return;
+    if(e.code === "Space"){ e.preventDefault(); if(state.playing) stopPlay(); else startPlay(); }
+    else if(e.key === "ArrowRight"){ e.preventDefault(); state.pos = (state.pos + 1) % posCount(); step = 0; render(); }
+    else if(e.key === "ArrowLeft"){ e.preventDefault(); state.pos = (state.pos - 1 + posCount()) % posCount(); step = 0; render(); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); setBpm(state.bpm + (e.shiftKey ? 10 : 2)); }
+    else if(e.key === "ArrowDown"){ e.preventDefault(); setBpm(state.bpm - (e.shiftKey ? 10 : 2)); }
+  });
+}
+
+buildControls();
+render();
+})();
+</script>
+</body>
+</html>

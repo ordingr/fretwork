@@ -1,0 +1,12 @@
+services:
+  fretwork:
+    image: nginx:alpine
+    container_name: fretwork
+    restart: unless-stopped
+    # QNAP's firewall hook fails when Compose creates its own bridge network
+    network_mode: bridge
+    ports:
+      - "3094:80"
+    volumes:
+      - .:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
