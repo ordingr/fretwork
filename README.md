@@ -12,7 +12,7 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 **3NPS positions** — one position per scale degree, each labelled with the note it starts on and its fret range. Switch to 2 notes per string for pentatonic boxes, or 4 for stretch work.
 
-**Piano** — the same scale on a keyboard, sharing the fretboard's colours. A dot marks the notes in the position you're playing, and during playback the fretboard dot and the piano key light up together.
+**Piano** — the same scale on a keyboard, sharing the fretboard's colours. **Keyboard shows** switches between all keys, only the notes in the scale, and only the notes in the position you're drilling; anything excluded goes dark, so the scale is all that reads. A ringed dot marks the position notes, and during playback the fretboard dot and the piano key light up together.
 
 **Circle of fifths** — the scale's notes are highlighted in place, so you can see that a major scale is seven *adjacent* slices of the circle and that harmonic minor isn't. Reports the key signature, derived from the scale's own spelling. Click either ring to jump key.
 

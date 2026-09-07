@@ -192,9 +192,21 @@ select:hover{border-color:var(--accent)}
 .pkey.fifth{background:linear-gradient(180deg,#C4CCD2,var(--dot-fifth)); color:var(--dot-fifth-ink)}
 .pkey.third{background:linear-gradient(180deg,#63C4AE,var(--dot-third)); color:var(--dot-third-ink)}
 .pkey.root{background:linear-gradient(180deg,#F2C282,var(--dot-root)); color:var(--dot-root-ink)}
-.pkey.inpos::before{content:""; position:absolute; top:9px; left:50%; margin-left:-3px;
-  width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.8}
+/* scale tones outside the position sit back; the position reads at full strength */
+.pkey.notpos{filter:saturate(.3) brightness(.93)}
+/* out of scale, switched off — the key stays for shape, the note goes dark */
+.pkey.off.white{background:linear-gradient(180deg,#4C4841,#3A3630); color:transparent;
+  box-shadow:inset -1px 0 0 #2A2621, 0 2px 3px rgba(0,0,0,.35)}
+.pkey.off.black{background:linear-gradient(180deg,#26211B,#131110); color:transparent}
+/* position marker: a dot ringed light-then-dark, so it carries on every key colour */
+.pkey.inpos::before{content:""; position:absolute; top:10px; left:50%; margin-left:-4.5px;
+  width:9px; height:9px; border-radius:50%; background:currentColor;
+  box-shadow:0 0 0 2px rgba(255,255,255,.85), 0 0 0 3.5px rgba(0,0,0,.45)}
+.pkey.black.inpos::before{top:8px; margin-left:-3.5px; width:7px; height:7px;
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.9), 0 0 0 2.5px rgba(0,0,0,.5)}
 .pkey.is-playing{box-shadow:0 0 0 2px var(--dot-root), 0 0 15px rgba(216,164,79,.85); z-index:3}
+.piano-head{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-bottom:2px}
+.piano-head .ctl-label{margin:0}
 .piano-legend{margin:0; font-size:12px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
 
 /* ---- circle of fifths ---- */
@@ -331,8 +343,12 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
   </section>
 
   <section class="piano-shell" id="pianoShell" aria-label="Keyboard">
+    <div class="piano-head">
+      <span class="ctl-label" id="pkLbl">Keyboard shows</span>
+      <div class="seg" id="pkSeg" role="group" aria-labelledby="pkLbl"></div>
+    </div>
     <div class="piano-scroll"><div class="piano" id="pianoBoard"></div></div>
-    <p class="piano-legend">The same scale on a keyboard &mdash; filled keys share the fretboard colours, and a dot marks the notes in the position you are practising.</p>
+    <p class="piano-legend">Filled keys share the fretboard colours &mdash; a ringed dot marks the notes in the position you are practising.</p>
   </section>
 
   <section class="panel positions" aria-label="Positions">
@@ -472,7 +488,7 @@ var FIFTHS = [
 
 var state = {
   rootIdx:9, scaleId:"aeolian", tuneId:"std", nps:3, pos:0,
-  labels:"note", showAll:true, lefty:false, piano:true,
+  labels:"note", showAll:true, lefty:false, piano:true, pkeys:"scale",
   bpm:72, div:3, dir:"updown", loop:true, metro:false, vol:0.7, playing:false
 };
 
@@ -654,12 +670,19 @@ function drawPiano(){
     var rel = (((pc - r.pc) % 12) + 12) % 12;
     var di = iv.indexOf(rel);
     var deg = di >= 0 ? degs[di] : null;
-    var cls = "pkey " + (isWhite ? "white" : "black");
-    if(deg) cls += " " + tierOf({deg:deg});
-    if(inPos[m]) cls += " inpos";
+    var cls = "pkey " + (isWhite ? "white" : "black"), off = false;
+    if(deg && inPos[m]){
+      cls += " " + tierOf({deg:deg}) + " inpos";
+    } else if(deg){
+      if(state.pkeys === "pos"){ cls += " off"; off = true; }
+      else cls += " " + tierOf({deg:deg}) + " notpos";
+    } else if(state.pkeys !== "all"){
+      cls += " off"; off = true;
+    }
     var lbl = "";
-    if(state.labels === "degree") lbl = deg ? pretty(deg.label) : "";
-    else if(state.labels !== "none") lbl = deg ? spell(deg) : (isWhite ? SHARP[pc] : "");
+    if(off || state.labels === "none") lbl = "";
+    else if(state.labels === "degree") lbl = deg ? pretty(deg.label) : "";
+    else lbl = deg ? spell(deg) : (isWhite ? SHARP[pc] : "");
     var nm = deg ? spell(deg) : SHARP[pc];
     var oct = Math.floor(m / 12) - 1;
     var title = nm + oct + (deg ? " · degree " + deg.label : " · outside the scale");
@@ -1108,6 +1131,10 @@ function buildControls(){
   $("#tuneSel").onchange = function(){ state.tuneId = this.value; state.pos = 0; step = 0; render(); };
 
   buildNps();
+
+  seg($("#pkSeg"),
+    [{v:"all",t:"All keys"},{v:"scale",t:"In the scale"},{v:"pos",t:"This position"}],
+    state.pkeys, function(v){ state.pkeys = v; drawPiano(); });
 
   seg($("#labSeg"),
     [{v:"note",t:"Notes"},{v:"degree",t:"Degrees"},{v:"finger",t:"Fingers"},{v:"none",t:"None"}],
