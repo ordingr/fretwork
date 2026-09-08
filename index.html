@@ -304,10 +304,11 @@ input[type="range"]::-moz-range-thumb{width:13px; height:13px; border-radius:50%
 .harm-note{margin:0; font-size:13px; color:var(--ink-3); text-wrap:pretty}
 .bars{display:flex; gap:4px; flex-wrap:wrap}
 .bars[hidden]{display:none}
-.bar{flex:1 1 0; min-width:64px; padding:6px 9px 7px; border-radius:6px;
-  border:1px solid var(--line); background:var(--surface-2);
-  display:flex; flex-direction:column; gap:1px}
-.bar.on{background:var(--accent-soft); border-color:var(--accent)}
+.bar{flex:1 1 0; min-width:64px; padding:6px 9px 7px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--line); background:var(--surface-2); text-align:left;
+  display:flex; flex-direction:column; gap:1px; transition:border-color .12s}
+.bar:hover{border-color:var(--accent)}
+.bar.on, .bar.sel{background:var(--accent-soft); border-color:var(--accent)}
 .bar .sym{font-family:"IBM Plex Mono",monospace; font-size:12.5px; font-weight:600; color:var(--ink)}
 .bar .cnt{font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--ink-3)}
 .play.alt{min-width:104px; font-size:14px; padding:9px 16px}
@@ -550,7 +551,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
     </div>
   </section>
 
-  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 5f4a4d1</span></footer>
+  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 987d874</span></footer>
 </div>
 
 <script>
@@ -1162,10 +1163,17 @@ function activeChord(){
     var ch = progChords();
     if(ch.length) return ch[(bk.shown >= 0 ? bk.shown : 0) % ch.length];
   }
+  if(state.pinned && state.pinned.full) return state.pinned.full;
   var dia = diatonicChords();
-  if(state.pinned && dia && dia[state.pinned.i]) return dia[state.pinned.i];
   if(dia && dia.length) return dia[0];
   return tonicChordFromScale();
+}
+/* sound the chord in force, in whatever inversion is selected */
+function playChordNow(){
+  var c = activeChord(); if(!c) return;
+  var inv = state.inv === "smooth" ? 0 : Number(state.inv);
+  var t0 = ac() ? actx.currentTime : 0;
+  voiceOf(c.rootPc, c.q, inv).forEach(function(m, j){ playTone(m, t0 + j * 0.02, 0.34); });
 }
 
 var HIT_CAP = 21;
@@ -1237,9 +1245,10 @@ function drawHarmony(){
   var pcs = progChords(), bars = $("#progBars");
   bars.hidden = !pcs.length;
   bars.innerHTML = pcs.map(function(c, i){
-    return '<div class="bar' + (bk.playing && i === bk.shown ? " on" : "") + '" data-i="' + i + '">' +
-           '<span class="sym">' + c.sym + '</span><span class="cnt">' +
-           c.bars + (c.bars === 1 ? " bar" : " bars") + "</span></div>";
+    var sel = !bk.playing && state.pinned && state.pinned.src === "bar" && state.pinned.i === i;
+    return '<button class="bar' + (bk.playing && i === bk.shown ? " on" : "") + (sel ? " sel" : "") +
+           '" data-i="' + i + '"><span class="sym">' + c.sym + '</span><span class="cnt">' +
+           c.bars + (c.bars === 1 ? " bar" : " bars") + "</span></button>";
   }).join("");
   $("#bkBtn").disabled = !pcs.length;
   $("#bkBtn").style.opacity = pcs.length ? "" : ".45";
@@ -2061,7 +2070,21 @@ function buildControls(){
 
   seg($("#invSeg"),
     [{v:"smooth",t:"Smooth"},{v:"0",t:"Root"},{v:"1",t:"1st"},{v:"2",t:"2nd"},{v:"3",t:"3rd"}],
-    state.inv, function(v){ state.inv = v; drawPiano(); });
+    state.inv, function(v){ state.inv = v; drawPiano(); playChordNow(); });
+
+  $("#progBars").addEventListener("click", function(e){
+    var b = e.target.closest(".bar"); if(!b) return;
+    var i = Number(b.getAttribute("data-i"));
+    var ch = progChords(); if(!ch[i]) return;
+    var c = ch[i];
+    var was = state.pinned && state.pinned.src === "bar" && state.pinned.i === i;
+    state.pinned = was ? null : {src:"bar", i:i, pcs:c.pcs, chord:{rootPc:c.rootPc, q:c.q}, full:c};
+    var t0 = ac() ? actx.currentTime : 0;
+    voiceOf(c.rootPc, c.q, state.inv === "smooth" ? 0 : Number(state.inv))
+      .forEach(function(m, j){ playTone(m, t0 + j * 0.02, 0.34); });
+    drawBoard(); drawPiano(); drawHarmony(); applyMarks(); updateHint();
+    if(state.playing && state.playWhat === "arp") buildSequence();
+  });
 
   $("#bkBtn").onclick = function(){ if(bk.playing) bkStop(); else bkStart(); };
   $("#targets").onchange = function(){ state.targets = this.checked; applyMarks(); };
@@ -2071,17 +2094,16 @@ function buildControls(){
     var chords = diatonicChords();
     if(!chords || !chords[i]) return;
     var c = chords[i];
-    if(state.pinned && state.pinned.src === "chord" && state.pinned.i === i){
-      state.pinned = null;
-    } else {
-      state.pinned = {src:"chord", i:i, pcs:c.pcs, chord:{rootPc:c.rootPc, q:c.q}};
-      var t0 = ac() ? actx.currentTime : 0;
-      voiceOf(c.rootPc, c.q, state.inv === "smooth" ? 0 : Number(state.inv))
-        .forEach(function(m, j){ playTone(m, t0 + j * 0.02, 0.34); });
-    }
-    Array.prototype.forEach.call(this.children, function(el){
-      el.setAttribute("aria-pressed", String(!!state.pinned && Number(el.getAttribute("data-i")) === i));
-    });
+    var wasPinned = state.pinned && state.pinned.src === "chord" && state.pinned.i === i;
+    state.pinned = wasPinned ? null
+      : {src:"chord", i:i, pcs:c.pcs, chord:{rootPc:c.rootPc, q:c.q}, full:c};
+    /* sound it either way — a click on a chord should always be audible */
+    var t0 = ac() ? actx.currentTime : 0;
+    voiceOf(c.rootPc, c.q, state.inv === "smooth" ? 0 : Number(state.inv))
+      .forEach(function(m, j){ playTone(m, t0 + j * 0.02, 0.34); });
+    /* redraw the whole panel: it owns both the chip and the bar highlights,
+       so setting one by hand leaves the other stale */
+    drawHarmony();
     drawBoard();
     drawPiano();
     applyMarks();

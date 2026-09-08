@@ -20,7 +20,7 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 **Circle of fifths** — the scale's notes are highlighted in place, so you can see that a major scale is seven *adjacent* slices of the circle and that harmonic minor isn't. Reports the key signature, derived from the scale's own spelling. Click either ring to jump key.
 
-**Chords** — the seven chords the current scale generates, stacked in thirds through the scale itself, as triads or sevenths with Roman numerals. Every mode gets its own set, and it stays correct in the awkward corners: A harmonic minor yields Am(maj7), Bm7♭5, Cmaj7♯5, Dm7, E7, Fmaj7, G♯°7. Click a chord to hear it and light its tones on the neck.
+**Chords** — the seven chords the current scale generates, stacked in thirds through the scale itself, as triads or sevenths with Roman numerals. Every mode gets its own set, and it stays correct in the awkward corners: A harmonic minor yields Am(maj7), Bm7♭5, Cmaj7♯5, Dm7, E7, Fmaj7, G♯°7. Click a chord to hear it and light its tones on the neck. Every chord control is audible: the chips, the bars of a progression, and the inversion buttons, which sound the chord again so you can hear what moved rather than only watching it.
 
 **Progressions** — ii–V–I, 12-bar blues (straight and quick-change), I–V–vi–IV, the andalusian cadence, the full diatonic circle and more. Pick one and it loops in time as a backing track, so you can solo over it with the shape you're drilling. While it plays, everything that isn't a chord tone *right now* fades back on both the fretboard and the piano — target-note practice.
 
