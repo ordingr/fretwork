@@ -168,6 +168,9 @@ select:hover{border-color:var(--accent)}
 .dot.tone{background:rgba(20,17,14,.55); color:var(--dot-tone-ink); border-color:var(--dot-tone)}
 .dot.ghost{background:transparent; color:var(--ghost-ink); border-color:var(--ghost); border-style:dashed;
   width:20px; height:20px; margin:-10px 0 0 -10px; font-size:9.5px; font-weight:400}
+/* in the chord but not in the scale — a borrowed note, and often the whole
+   point of the chord (the G# in an E major over A minor) */
+.dot.borrowed{background:rgba(18,15,12,.62); color:#F3EBD9; border-color:#F3EBD9; border-width:2px}
 .dot.ghost:hover{border-style:solid; color:var(--dot-tone-ink)}
 .dot.is-playing{box-shadow:0 0 0 3px var(--dot-root), 0 0 16px rgba(216,164,79,.7);
   transform:scale(1.2); z-index:6}
@@ -324,6 +327,7 @@ input[type="range"]::-moz-range-thumb{width:13px; height:13px; border-radius:50%
 .legend .sw-fifth{background:var(--dot-fifth); color:var(--dot-fifth-ink)}
 .legend .sw-tone{background:#151210; color:var(--dot-tone-ink); border-color:var(--dot-tone)}
 .legend .sw-ghost{border-color:var(--ghost); border-style:dashed; color:var(--ghost-ink)}
+.legend .sw-borrowed{background:#151210; border-color:#F3EBD9; border-width:2px; color:#F3EBD9}
 
 .shape{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:2px}
 .shape li{display:grid; grid-template-columns:52px 1fr auto; gap:10px; align-items:baseline;
@@ -478,6 +482,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
         <li><span class="swatch sw-fifth">5</span> The fifth &mdash; your anchor</li>
         <li><span class="swatch sw-tone">&#9679;</span> Other tones in this position</li>
         <li><span class="swatch sw-ghost">&#9679;</span> Same scale, other positions</li>
+        <li><span class="swatch sw-borrowed">&#9679;</span> In the chord, outside the scale</li>
       </ul>
     </div>
     <div class="panel card">
@@ -497,7 +502,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
     </div>
   </section>
 
-  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 9c4a8d0</span></footer>
+  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build e77664e</span></footer>
 </div>
 
 <script>
@@ -1296,6 +1301,14 @@ function drawBoard(){
   var degs = degList(), iv = degs.map(function(d){ return d.semi; });
   var inPos = {};
   shape.notes.forEach(function(nt){ inPos[nt.s + ":" + nt.f] = nt; });
+  /* chord tones that the scale has no dot for — shown only while a chord is up */
+  var borrowed = {};
+  if(state.pinned || bk.playing){
+    var ac = activeChord();
+    if(ac) ac.pcs.forEach(function(pc){
+      if(iv.indexOf((((pc - r.pc) % 12) + 12) % 12) < 0) borrowed[pc] = true;
+    });
+  }
 
   var h = S * ROW, names = "", openCol = "", neck = "", nums = "", row, s, n, f;
 
@@ -1331,11 +1344,15 @@ function drawBoard(){
       var rel = (((pc - r.pc) % 12) + 12) % 12;
       var di = iv.indexOf(rel);
       var hit = inPos[s + ":" + f];
-      if(!hit && (di < 0 || !state.showAll)) continue;
+      var isBorrowed = di < 0 && borrowed[pc];
+      if(!hit && !isBorrowed && (di < 0 || !state.showAll)) continue;
       var nt = hit || {s:s, f:f, midi:open[s] + f, pc:pc, degIdx:di, deg:degs[di], finger:0, order:-1};
-      var cls = hit ? "dot " + tierOf(nt) : "dot ghost";
-      var lbl = labelFor(nt, !hit);
-      var title = (nt.deg ? spell(nt.deg) + " · degree " + nt.deg.label : SHARP[pc]) +
+      var cls = hit ? "dot " + tierOf(nt) : (isBorrowed ? "dot borrowed" : "dot ghost");
+      var lbl = isBorrowed
+        ? (state.labels === "none" || state.labels === "finger" ? "" : SHARP[pc])
+        : labelFor(nt, !hit);
+      var title = (nt.deg ? spell(nt.deg) + " · degree " + nt.deg.label
+                          : SHARP[pc] + (isBorrowed ? " · in the chord, outside the scale" : "")) +
                   " · string " + (S - s) + ", fret " + f;
       var attrs = ' data-midi="' + nt.midi + '" data-idx="' + (hit ? nt.order : -1) +
                   '" title="' + title + '" aria-label="' + title + '"';
@@ -1627,8 +1644,9 @@ function bkStop(){
   var on = document.querySelectorAll(".bar.on");
   for(var i = 0; i < on.length; i++) on[i].classList.remove("on");
   bk.shown = -1;
-  applyMarks();
+  drawBoard();
   drawPiano();
+  applyMarks();
 }
 function bkSched(){
   if(!bk.playing || !actx) return;
@@ -1671,8 +1689,9 @@ function bkPaint(){
     for(var i = 0; i < bars.length; i++){
       bars[i].classList.toggle("on", Number(bars[i].getAttribute("data-i")) === cur.i);
     }
-    applyMarks();
+    drawBoard();
     drawPiano();
+    applyMarks();
     updateHint();
     if(state.playing && state.playWhat === "arp"){
       step = 0;          // each chord starts its arpeggio from the bottom
@@ -1811,8 +1830,9 @@ function buildControls(){
     Array.prototype.forEach.call(this.children, function(el){
       el.setAttribute("aria-pressed", String(!!state.pinned && Number(el.getAttribute("data-i")) === i));
     });
-    applyMarks();
+    drawBoard();
     drawPiano();
+    applyMarks();
     updateHint();
     if(state.playing && state.playWhat === "arp") buildSequence();
   });

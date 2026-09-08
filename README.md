@@ -8,7 +8,7 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 ## What it does
 
-**Fretboard** — 22 frets, six or seven strings, drawn with true scale-length fret taper. Dots are coloured by function: root, third, fifth, other scale tones. Notes outside the current position show as dashed ghosts so you can see where to shift next.
+**Fretboard** — 22 frets, six or seven strings, drawn with true scale-length fret taper. Dots are coloured by function: root, third, fifth, other scale tones. Notes outside the current position show as dashed ghosts so you can see where to shift next. When a chord is in force, tones it needs that the scale does not have are drawn as bone-white rings — the G♯ in an E major over A minor, which is exactly the note that makes it a V rather than a v.
 
 **3NPS positions** — one position per scale degree, each labelled with the note it starts on and its fret range. Switch to 2 notes per string for pentatonic boxes, or 4 for stretch work.
 
