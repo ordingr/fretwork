@@ -12,7 +12,7 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 **3NPS positions** — one position per scale degree, each labelled with the note it starts on and its fret range. Switch to 2 notes per string for pentatonic boxes, or 4 for stretch work.
 
-**Piano** — two octaves, C3 to C5, big enough to read at a glance. Filled keys are the scale; when a chord is up, the red-marked keys are that chord **as it is actually voiced**, so switching between root position, 1st, 2nd and 3rd inversion shows the notes physically move. **Keyboard shows** switches between all keys, only the scale, and only the notes in the position you're drilling; anything excluded goes dark. Chord tones from outside the loaded scale still light up, because you need to see them.
+**Piano** — two octaves, C3 to C5, and it looks like a piano: white naturals, black accidentals, always. Scale function is carried by a coloured band under each key rather than by repainting it. Red discs mark the chord **as it is actually voiced**, so switching between root position, 1st, 2nd and 3rd inversion shows the notes physically move, and each disc is numbered with the order the comping pattern strikes it — notes hit together share a number. As the loop runs, each key lights the moment it sounds, so an arpeggio is something you watch, not just hear. **Keyboard shows** filters to all keys, the scale, or the position you're drilling.
 
 **Circle of fifths** — the scale's notes are highlighted in place, so you can see that a major scale is seven *adjacent* slices of the circle and that harmonic minor isn't. Reports the key signature, derived from the scale's own spelling. Click either ring to jump key.
 

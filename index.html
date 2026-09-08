@@ -180,35 +180,46 @@ select:hover{border-color:var(--accent)}
 .piano{background:var(--board-edge); border-radius:10px; padding:12px 14px 14px;
   display:inline-block; flex:none; box-shadow:var(--shadow)}
 .keys{position:relative; height:120px; margin:0 auto}
-.pkey{position:absolute; top:0; padding:0 0 6px; cursor:pointer; border:0;
+/* A piano is white and black. Scale function is carried by a coloured band
+   along the bottom of the key, never by repainting the key itself. */
+.pkey{position:absolute; top:0; cursor:pointer; border:0;
   font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600;
   display:flex; align-items:flex-end; justify-content:center}
-.pkey.white{height:120px; width:40px; border-radius:0 0 5px 5px; font-size:11px;
-  background:linear-gradient(180deg,#FBF9F4,#E6E2D7); color:#6B665B;
+.pkey.white{height:120px; width:40px; border-radius:0 0 5px 5px; font-size:11px; padding:0 0 19px;
+  background:linear-gradient(180deg,#FCFBF7,#E8E4DA); color:#6B665B;
   box-shadow:inset -1px 0 0 #C6C0B1, 0 2px 3px rgba(0,0,0,.35)}
-.pkey.black{height:75px; width:25px; border-radius:0 0 4px 4px; z-index:2; font-size:10px;
-  background:linear-gradient(180deg,#3A342D,#16130F); color:#9A9285;
+.pkey.black{height:75px; width:25px; border-radius:0 0 4px 4px; z-index:2; font-size:9.5px; padding:0 0 15px;
+  background:linear-gradient(180deg,#3C362F,#141210); color:#B4ADA0;
   box-shadow:0 3px 4px rgba(0,0,0,.55)}
-/* a chord tone that the loaded scale does not contain still has to show */
-.pkey.chordtone{background:linear-gradient(180deg,#C4CCD2,var(--dot-fifth)); color:var(--dot-fifth-ink)}
-.pkey.black.chordtone{background:linear-gradient(180deg,#8E979E,#5E666C); color:#0F151A}
-.pkey.tone{background:linear-gradient(180deg,#BEB6A6,#8E8779); color:#211E19}
-.pkey.black.tone{background:linear-gradient(180deg,#6E6759,#443E33); color:#E8E2D4}
-.pkey.fifth{background:linear-gradient(180deg,#C4CCD2,var(--dot-fifth)); color:var(--dot-fifth-ink)}
-.pkey.third{background:linear-gradient(180deg,#63C4AE,var(--dot-third)); color:var(--dot-third-ink)}
-.pkey.root{background:linear-gradient(180deg,#F2C282,var(--dot-root)); color:var(--dot-root-ink)}
-/* scale tones outside the position sit back; the position reads at full strength */
-.pkey.notpos{filter:saturate(.3) brightness(.93)}
-/* out of scale, switched off — the key stays for shape, the note goes dark */
-.pkey.off.white{background:linear-gradient(180deg,#4C4841,#3A3630); color:transparent;
-  box-shadow:inset -1px 0 0 #2A2621, 0 2px 3px rgba(0,0,0,.35)}
-.pkey.off.black{background:linear-gradient(180deg,#26211B,#131110); color:transparent}
-/* position marker: a dot ringed light-then-dark, so it carries on every key colour */
-.pkey.inpos::before{content:""; position:absolute; top:13px; left:50%; margin-left:-5.5px;
-  width:11px; height:11px; border-radius:50%; background:var(--key-mark);
+.pkey.root::after, .pkey.third::after, .pkey.fifth::after,
+.pkey.tone::after, .pkey.chordtone::after{
+  content:""; position:absolute; left:5px; right:5px; bottom:5px; height:6px; border-radius:3px}
+.pkey.black.root::after, .pkey.black.third::after, .pkey.black.fifth::after,
+.pkey.black.tone::after, .pkey.black.chordtone::after{left:4px; right:4px; bottom:4px; height:5px}
+.pkey.root::after{background:var(--dot-root)}
+.pkey.third::after{background:var(--dot-third)}
+.pkey.fifth::after{background:var(--dot-fifth)}
+.pkey.tone::after{background:var(--dot-tone)}
+.pkey.chordtone::after{background:var(--dot-fifth)}
+/* scale tones outside the position keep a fainter band */
+.pkey.notpos::after{opacity:.4}
+/* switched off — a key stays the colour a key is; it simply loses its
+   name and its function band, so only the scale reads */
+.pkey.off.white{background:linear-gradient(180deg,#F1EEE7,#DBD7CD); color:transparent}
+.pkey.off.black{background:linear-gradient(180deg,#3C362F,#141210); color:transparent}
+/* marker: a red disc, carrying the order number when the pattern has one */
+.pkey.inpos::before{content:attr(data-ord); position:absolute; top:12px; left:50%; margin-left:-7px;
+  width:14px; height:14px; border-radius:50%; background:var(--key-mark); color:#fff;
+  font-family:"IBM Plex Mono",monospace; font-size:8.5px; font-weight:700; line-height:1;
+  display:flex; align-items:center; justify-content:center;
   box-shadow:0 0 0 2px rgba(255,255,255,.8), 0 0 0 3px rgba(0,0,0,.4)}
-.pkey.black.inpos::before{top:11px; margin-left:-4.5px; width:9px; height:9px;
+.pkey.black.inpos::before{top:10px; margin-left:-6px; width:12px; height:12px; font-size:7.5px;
   box-shadow:0 0 0 1.5px rgba(255,255,255,.85), 0 0 0 2.5px rgba(0,0,0,.45)}
+/* struck right now */
+.pkey.is-hit{box-shadow:0 0 0 2px var(--key-mark), 0 0 18px rgba(226,59,46,.8); z-index:4}
+.pkey.white.is-hit{background:linear-gradient(180deg,#FFF3F1,#F3D9D5)}
+.pkey.black.is-hit{background:linear-gradient(180deg,#5A3A36,#2A1614)}
+.pkey.is-hit::before{transform:scale(1.22)}
 .pkey.is-playing{box-shadow:0 0 0 2px var(--dot-root), 0 0 15px rgba(216,164,79,.85); z-index:3}
 .piano-head{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-bottom:2px}
 .piano-head .ctl-label{margin:0}
@@ -660,8 +671,10 @@ function styleEvents(id, steps, notes){
     if(!seq.length) seq = notes;
     for(i = 0; i < steps; i++) ev.push({s:i, n:[seq[i % seq.length]], g:0.2, d:0.85});
   } else if(id === "alberti"){
-    var top = notes.length - 1, midi = Math.max(1, Math.min(top - 1, 1));
-    var pat = [0, top, midi, top];
+    /* classic low-high-middle-high on a triad; on a seventh chord it opens
+       out to a broken chord so no tone is left silent */
+    var top = notes.length - 1;
+    var pat = notes.length >= 4 ? [0, 2, 1, 3] : [0, top, Math.min(1, top), top];
     for(i = 0; i < steps; i++) ev.push({s:i, n:[notes[pat[i % 4]]], g:0.19, d:0.8});
   }
   return ev;
@@ -831,6 +844,28 @@ function render(){
 
 /* ---------------- piano ---------------- */
 var WHITE_PC = [0,2,4,5,7,9,11];
+/* Number the chord tones by the order the current comping pattern strikes
+   them. Notes hit together share a number; if the whole chord lands at once
+   the numbering says nothing, so it is dropped. */
+function noteOrder(voiced){
+  if(!voiced || !voiced.length) return null;
+  var ts = timesig();
+  var ev = styleEvents(state.style, ts.steps, voiced);
+  if(!ev.length) return null;
+  var first = {};
+  ev.forEach(function(e){
+    e.n.forEach(function(m){ if(first[m] === undefined) first[m] = e.s; });
+  });
+  var steps = [];
+  Object.keys(first).forEach(function(m){
+    if(steps.indexOf(first[m]) < 0) steps.push(first[m]);
+  });
+  if(steps.length < 2) return null;
+  steps.sort(function(a, b){ return a - b; });
+  var out = {};
+  Object.keys(first).forEach(function(m){ out[m] = steps.indexOf(first[m]) + 1; });
+  return out;
+}
 function drawPiano(){
   var shell = $("#pianoShell");
   shell.hidden = !state.piano;
@@ -841,6 +876,7 @@ function drawPiano(){
   shape.notes.forEach(function(nt){ posPcs[nt.pc] = true; });
   var voiced = currentVoicing(), vset = {};
   if(voiced) voiced.forEach(function(m){ vset[m] = true; });
+  var ord = voiced ? noteOrder(voiced) : null;
 
   var W = 40, BW = 25, whites = 0, html = "", x = 0, m;
   for(m = PIANO_LO; m <= PIANO_HI; m++){ if(WHITE_PC.indexOf(((m % 12) + 12) % 12) >= 0) whites++; }
@@ -874,14 +910,18 @@ function drawPiano(){
     var nm = deg ? spell(deg) : SHARP[pc];
     var title = nm + (Math.floor(m / 12) - 1) + (deg ? " · degree " + deg.label : " · outside the scale");
     var left = isWhite ? x : (x - BW / 2);
+    var ordTxt = (marked && ord && ord[m]) ? String(ord[m]) : "";
     html += '<button class="' + cls + '" style="left:' + left + 'px" data-midi="' + m +
-            '" data-pc="' + pc + '" title="' + title + '" aria-label="' + title + '">' + lbl + "</button>";
+            '" data-pc="' + pc + '" data-ord="' + ordTxt + '" title="' + title +
+            '" aria-label="' + title + '">' + lbl + "</button>";
     if(isWhite) x += W;
   }
   $("#pianoBoard").innerHTML = '<div class="keys" style="width:' + (whites * W) + 'px">' + html + "</div>";
   $("#pianoLegend").textContent = voiced
-    ? "Ringed keys are the chord as it is actually voiced — change the inversion and watch them move."
-    : "Two octaves. Filled keys are the scale; ringed keys are the pitches in the position you are practising.";
+    ? (ord
+        ? "Red discs are the chord's voicing, numbered in the order the pattern strikes them. Keys light as they are hit."
+        : "Red discs are the chord as it is actually voiced — change the inversion and watch them move.")
+    : "Two octaves. The coloured band under a key gives its scale function; red discs are the pitches in the position you are practising.";
 }
 
 /* ---------------- chords ---------------- */
@@ -1468,7 +1508,7 @@ function paint(){
 }
 
 /* ---------------- backing loop ---------------- */
-var bk = {playing:false, timer:null, idx:0, nextTime:0, visQ:[], shown:-1};
+var bk = {playing:false, timer:null, idx:0, nextTime:0, visQ:[], hitQ:[], lit:[], shown:-1};
 
 function markChordTones(pcs){
   var on = !!pcs;
@@ -1499,7 +1539,8 @@ function bkStart(){
   if(!ac()) return;
   var chords = progChords();
   if(!chords.length) return;
-  bk.playing = true; bk.idx = 0; bk.shown = -1; bk.visQ = [];
+  bk.playing = true; bk.idx = 0; bk.shown = -1;
+  bk.visQ = []; bk.hitQ = []; bk.lit = []; bk.lastHit = null;
   bk.nextTime = actx.currentTime + 0.1;
   bk.timer = setInterval(bkSched, 25);
   requestAnimationFrame(bkPaint);
@@ -1510,7 +1551,8 @@ function bkStart(){
 function bkStop(){
   bk.playing = false;
   if(bk.timer){ clearInterval(bk.timer); bk.timer = null; }
-  bk.visQ = [];
+  bk.visQ = []; bk.hitQ = []; bk.lastHit = null;
+  clearHits();
   $("#bkBtn").setAttribute("aria-pressed", "false");
   $("#bkGlyph").innerHTML = "&#9654;";
   $("#bkTxt").textContent = "Loop";
@@ -1536,6 +1578,7 @@ function bkSched(){
         e.n.forEach(function(mn, j){
           playTone(mn, t + j * (e.roll || 0), e.g, e.d);
         });
+        bk.hitQ.push({t:t, ms:e.n.slice()});
       });
     }
     bk.visQ.push({i:i, t:bk.nextTime});
@@ -1543,10 +1586,15 @@ function bkSched(){
     bk.idx = (bk.idx + 1) % chords.length;
   }
 }
+function clearHits(){
+  bk.lit.forEach(function(el){ el.classList.remove("is-hit"); });
+  bk.lit = [];
+}
 function bkPaint(){
   if(!bk.playing) return;
-  var now = actx ? actx.currentTime : 0, cur = null;
+  var now = actx ? actx.currentTime : 0, cur = null, hit = null;
   while(bk.visQ.length && bk.visQ[0].t <= now) cur = bk.visQ.shift();
+  while(bk.hitQ.length && bk.hitQ[0].t <= now) hit = bk.hitQ.shift();
   /* bk.idx is the scheduler's cursor and runs ahead; bk.shown is what is
      sounding now. Never write idx from here or the loop re-schedules itself. */
   if(cur && cur.i !== bk.shown){
@@ -1557,6 +1605,16 @@ function bkPaint(){
     }
     applyMarks();
     drawPiano();
+    bk.lit = [];        // the redraw dropped the old elements
+    hit = hit || bk.lastHit;
+  }
+  if(hit){
+    bk.lastHit = hit;
+    clearHits();
+    hit.ms.forEach(function(m){
+      var el = document.querySelector('.pkey[data-midi="' + m + '"]');
+      if(el){ el.classList.add("is-hit"); bk.lit.push(el); }
+    });
   }
   requestAnimationFrame(bkPaint);
 }
@@ -1649,13 +1707,13 @@ function buildControls(){
   $("#styleSel").innerHTML = STYLES.map(function(x){
     return '<option value="' + x.id + '"' + (x.id === state.style ? " selected" : "") + ">" + x.name + "</option>";
   }).join("");
-  $("#styleSel").onchange = function(){ state.style = this.value; };
+  $("#styleSel").onchange = function(){ state.style = this.value; drawPiano(); };
 
   $("#tsSel").innerHTML = TIMESIGS.map(function(x){
     return '<option value="' + x.id + '" title="' + x.note + '"' +
            (x.id === state.ts ? " selected" : "") + ">" + x.id + "</option>";
   }).join("");
-  $("#tsSel").onchange = function(){ state.ts = this.value; };
+  $("#tsSel").onchange = function(){ state.ts = this.value; drawPiano(); };
 
   seg($("#invSeg"),
     [{v:"smooth",t:"Smooth"},{v:"0",t:"Root"},{v:"1",t:"1st"},{v:"2",t:"2nd"},{v:"3",t:"3rd"}],
