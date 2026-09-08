@@ -340,6 +340,8 @@ input[type="range"]::-moz-range-thumb{width:13px; height:13px; border-radius:50%
 kbd{font-family:"IBM Plex Mono",monospace; font-size:11px; background:var(--surface-2);
   border:1px solid var(--line-2); border-bottom-width:2px; border-radius:4px; padding:1px 5px; color:var(--ink-2)}
 footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px solid var(--line); padding-top:16px}
+#build{display:block; margin-top:6px; font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+  letter-spacing:.1em; color:var(--ink-3); opacity:.7}
 
 @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
 </style>
@@ -495,7 +497,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
     </div>
   </section>
 
-  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.</footer>
+  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 9c4a8d0</span></footer>
 </div>
 
 <script>
@@ -892,10 +894,9 @@ function drawPiano(){
     var rel = (((pc - r.pc) % 12) + 12) % 12;
     var di = iv.indexOf(rel);
     var deg = di >= 0 ? degs[di] : null;
-    /* with a chord up, the marker shows that chord's actual voicing —
-       which is how an inversion becomes visible. Otherwise it falls back
-       to the pitch classes in the guitar position. */
-    var marked = voiced ? !!vset[m] : !!(deg && posPcs[pc]);
+    /* a red disc means "this chord, this voicing" and nothing else. Marking
+       every scale tone when no chord is up just paints the whole keyboard. */
+    var marked = voiced ? !!vset[m] : false;
     var cls = "pkey " + (isWhite ? "white" : "black"), off = false;
 
     if(marked){
@@ -926,7 +927,7 @@ function drawPiano(){
     ? (ord
         ? "Red discs are the chord's voicing, numbered in the order the pattern strikes them. Keys light as they are hit."
         : "Red discs are the chord as it is actually voiced — change the inversion and watch them move.")
-    : "Two octaves. The coloured band under a key gives its scale function; red discs are the pitches in the position you are practising.";
+    : "Two octaves. The coloured band under a key gives its scale function. Pick a chord or start a progression to see a voicing.";
 }
 
 /* ---------------- chords ---------------- */
