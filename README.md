@@ -16,6 +16,12 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 **Circle of fifths** — the scale's notes are highlighted in place, so you can see that a major scale is seven *adjacent* slices of the circle and that harmonic minor isn't. Reports the key signature, derived from the scale's own spelling. Click either ring to jump key.
 
+**Chords** — the seven chords the current scale generates, stacked in thirds through the scale itself, as triads or sevenths with Roman numerals. Every mode gets its own set, and it stays correct in the awkward corners: A harmonic minor yields Am(maj7), Bm7♭5, Cmaj7♯5, Dm7, E7, Fmaj7, G♯°7. Click a chord to hear it and light its tones on the neck.
+
+**Progressions** — ii–V–I, 12-bar blues (straight and quick-change), I–V–vi–IV, the andalusian cadence, the full diatonic circle and more. Pick one and it loops in time as a backing track at the current tempo, so you can solo over it with the shape you're drilling. While it plays, everything that isn't a chord tone *right now* fades back on both the fretboard and the piano — target-note practice.
+
+Each progression is also drawn on the circle of fifths as root motion. ii–V–I is three adjacent slices stepping anticlockwise; the diatonic circle is a full loop with one long diagonal across it, the tritone jump where the key runs out of perfect fifths.
+
 **Playback** — plays the position with a Karplus–Strong plucked-string voice, following each note on both instruments. 40–220 BPM, quarters/eighths/triplets/sixteenths, up / down / up-and-down, loop, metronome. Click any dot or key to hear it alone.
 
 **20 scales** — all seven major modes, harmonic and melodic minor, phrygian dominant, lydian dominant, altered, both pentatonics, minor and major blues, whole tone, both diminished scales, and chromatic.
