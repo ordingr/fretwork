@@ -51,6 +51,7 @@
   --dot-fifth:#98A2AA; --dot-fifth-ink:#0F151A;
   --dot-tone:#8E8779;  --dot-tone-ink:#EDE7D9;
   --ghost:#4A443B;     --ghost-ink:#6C6558;
+  --key-mark:#E23B2E;
   --names-w:40px; --open-w:48px; --row:38px;
 }
 
@@ -204,10 +205,10 @@ select:hover{border-color:var(--accent)}
 .pkey.off.black{background:linear-gradient(180deg,#26211B,#131110); color:transparent}
 /* position marker: a dot ringed light-then-dark, so it carries on every key colour */
 .pkey.inpos::before{content:""; position:absolute; top:13px; left:50%; margin-left:-5.5px;
-  width:11px; height:11px; border-radius:50%; background:currentColor;
-  box-shadow:0 0 0 2.5px rgba(255,255,255,.85), 0 0 0 4px rgba(0,0,0,.45)}
+  width:11px; height:11px; border-radius:50%; background:var(--key-mark);
+  box-shadow:0 0 0 2px rgba(255,255,255,.8), 0 0 0 3px rgba(0,0,0,.4)}
 .pkey.black.inpos::before{top:11px; margin-left:-4.5px; width:9px; height:9px;
-  box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px rgba(0,0,0,.5)}
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.85), 0 0 0 2.5px rgba(0,0,0,.45)}
 .pkey.is-playing{box-shadow:0 0 0 2px var(--dot-root), 0 0 15px rgba(216,164,79,.85); z-index:3}
 .piano-head{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-bottom:2px}
 .piano-head .ctl-label{margin:0}
