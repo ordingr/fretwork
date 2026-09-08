@@ -12,13 +12,15 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 **3NPS positions** — one position per scale degree, each labelled with the note it starts on and its fret range. Switch to 2 notes per string for pentatonic boxes, or 4 for stretch work.
 
-**Piano** — the same scale on a keyboard, sharing the fretboard's colours. **Keyboard shows** switches between all keys, only the notes in the scale, and only the notes in the position you're drilling; anything excluded goes dark, so the scale is all that reads. A ringed dot marks the position notes, and during playback the fretboard dot and the piano key light up together.
+**Piano** — two octaves, C3 to C5, big enough to read at a glance. Filled keys are the scale; when a chord is up, the ringed keys are that chord **as it is actually voiced**, so switching between root position, 1st, 2nd and 3rd inversion shows the notes physically move. **Keyboard shows** switches between all keys, only the scale, and only the notes in the position you're drilling; anything excluded goes dark. Chord tones from outside the loaded scale still light up, because you need to see them.
 
 **Circle of fifths** — the scale's notes are highlighted in place, so you can see that a major scale is seven *adjacent* slices of the circle and that harmonic minor isn't. Reports the key signature, derived from the scale's own spelling. Click either ring to jump key.
 
 **Chords** — the seven chords the current scale generates, stacked in thirds through the scale itself, as triads or sevenths with Roman numerals. Every mode gets its own set, and it stays correct in the awkward corners: A harmonic minor yields Am(maj7), Bm7♭5, Cmaj7♯5, Dm7, E7, Fmaj7, G♯°7. Click a chord to hear it and light its tones on the neck.
 
-**Progressions** — ii–V–I, 12-bar blues (straight and quick-change), I–V–vi–IV, the andalusian cadence, the full diatonic circle and more. Pick one and it loops in time as a backing track at the current tempo, so you can solo over it with the shape you're drilling. While it plays, everything that isn't a chord tone *right now* fades back on both the fretboard and the piano — target-note practice.
+**Progressions** — ii–V–I, 12-bar blues (straight and quick-change), I–V–vi–IV, the andalusian cadence, the full diatonic circle and more. Pick one and it loops in time as a backing track, so you can solo over it with the shape you're drilling. While it plays, everything that isn't a chord tone *right now* fades back on both the fretboard and the piano — target-note practice.
+
+**Feel, metre and voicing** — nine comping styles (block, pad, strum, bass-and-chord, waltz, charleston, arpeggio up, arpeggio up-and-down, Alberti bass) against 2/4, 3/4, 4/4, 5/4, 6/8 or 12/8, all following the same tempo control. The compound signatures count the dotted quarter, so 6/8 at 200 BPM gives a 0.6-second bar rather than a 1.8-second one. Inversion is fixed or **Smooth**, which picks the inversion that moves least from the previous chord — ordinary voice leading, and it makes the loop sound like music instead of a chord chart.
 
 Each progression is also drawn on the circle of fifths as root motion. ii–V–I is three adjacent slices stepping anticlockwise; the diatonic circle is a full loop with one long diagonal across it, the tritone jump where the key runs out of perfect fifths.
 

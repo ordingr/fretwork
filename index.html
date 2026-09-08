@@ -175,18 +175,22 @@ select:hover{border-color:var(--accent)}
 
 /* ---- piano: a real piano in both themes, like the neck ---- */
 .piano-shell[hidden]{display:none}
-.piano-scroll{overflow-x:auto; overflow-y:hidden; border-radius:10px; box-shadow:var(--shadow); scrollbar-width:thin}
-.piano{background:var(--board-edge); border-radius:10px; padding:9px 10px 10px; display:inline-block; min-width:100%}
-.keys{position:relative; height:92px}
+.piano-scroll{overflow-x:auto; overflow-y:hidden; display:flex; justify-content:center}
+.piano{background:var(--board-edge); border-radius:10px; padding:12px 14px 14px;
+  display:inline-block; flex:none; box-shadow:var(--shadow)}
+.keys{position:relative; height:120px; margin:0 auto}
 .pkey{position:absolute; top:0; padding:0 0 6px; cursor:pointer; border:0;
   font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600;
   display:flex; align-items:flex-end; justify-content:center}
-.pkey.white{height:92px; width:24px; border-radius:0 0 4px 4px;
+.pkey.white{height:120px; width:40px; border-radius:0 0 5px 5px; font-size:11px;
   background:linear-gradient(180deg,#FBF9F4,#E6E2D7); color:#6B665B;
   box-shadow:inset -1px 0 0 #C6C0B1, 0 2px 3px rgba(0,0,0,.35)}
-.pkey.black{height:57px; width:15px; border-radius:0 0 3px 3px; z-index:2; font-size:8.5px;
+.pkey.black{height:75px; width:25px; border-radius:0 0 4px 4px; z-index:2; font-size:10px;
   background:linear-gradient(180deg,#3A342D,#16130F); color:#9A9285;
   box-shadow:0 3px 4px rgba(0,0,0,.55)}
+/* a chord tone that the loaded scale does not contain still has to show */
+.pkey.chordtone{background:linear-gradient(180deg,#C4CCD2,var(--dot-fifth)); color:var(--dot-fifth-ink)}
+.pkey.black.chordtone{background:linear-gradient(180deg,#8E979E,#5E666C); color:#0F151A}
 .pkey.tone{background:linear-gradient(180deg,#BEB6A6,#8E8779); color:#211E19}
 .pkey.black.tone{background:linear-gradient(180deg,#6E6759,#443E33); color:#E8E2D4}
 .pkey.fifth{background:linear-gradient(180deg,#C4CCD2,var(--dot-fifth)); color:var(--dot-fifth-ink)}
@@ -199,11 +203,11 @@ select:hover{border-color:var(--accent)}
   box-shadow:inset -1px 0 0 #2A2621, 0 2px 3px rgba(0,0,0,.35)}
 .pkey.off.black{background:linear-gradient(180deg,#26211B,#131110); color:transparent}
 /* position marker: a dot ringed light-then-dark, so it carries on every key colour */
-.pkey.inpos::before{content:""; position:absolute; top:10px; left:50%; margin-left:-4.5px;
-  width:9px; height:9px; border-radius:50%; background:currentColor;
-  box-shadow:0 0 0 2px rgba(255,255,255,.85), 0 0 0 3.5px rgba(0,0,0,.45)}
-.pkey.black.inpos::before{top:8px; margin-left:-3.5px; width:7px; height:7px;
-  box-shadow:0 0 0 1.5px rgba(255,255,255,.9), 0 0 0 2.5px rgba(0,0,0,.5)}
+.pkey.inpos::before{content:""; position:absolute; top:13px; left:50%; margin-left:-5.5px;
+  width:11px; height:11px; border-radius:50%; background:currentColor;
+  box-shadow:0 0 0 2.5px rgba(255,255,255,.85), 0 0 0 4px rgba(0,0,0,.45)}
+.pkey.black.inpos::before{top:11px; margin-left:-4.5px; width:9px; height:9px;
+  box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px rgba(0,0,0,.5)}
 .pkey.is-playing{box-shadow:0 0 0 2px var(--dot-root), 0 0 15px rgba(216,164,79,.85); z-index:3}
 .piano-head{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-bottom:2px}
 .piano-head .ctl-label{margin:0}
@@ -382,7 +386,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
       <div class="seg" id="pkSeg" role="group" aria-labelledby="pkLbl"></div>
     </div>
     <div class="piano-scroll"><div class="piano" id="pianoBoard"></div></div>
-    <p class="piano-legend">Filled keys share the fretboard colours &mdash; a ringed dot marks the notes in the position you are practising.</p>
+    <p class="piano-legend" id="pianoLegend"></p>
   </section>
 
   <section class="panel positions" aria-label="Positions">
@@ -429,6 +433,14 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
       <select id="progSel"></select>
       <button class="play alt" id="bkBtn" aria-pressed="false"><span class="glyph" id="bkGlyph">&#9654;</span><span id="bkTxt">Loop</span></button>
       <label class="sw"><input type="checkbox" id="targets" checked><span>Mark chord tones</span></label>
+    </div>
+    <div class="harm-row">
+      <label class="ctl-label" for="styleSel">Feel</label>
+      <select id="styleSel"></select>
+      <label class="ctl-label" for="tsSel">Time</label>
+      <select id="tsSel" style="min-width:96px"></select>
+      <span class="ctl-label" id="invLbl">Inversion</span>
+      <div class="seg" id="invSeg" role="group" aria-labelledby="invLbl"></div>
     </div>
     <div class="bars" id="progBars"></div>
     <p class="harm-note warn" id="progNote"></p>
@@ -598,9 +610,66 @@ var PROGS = [
        {r:0,q:"dom7",b:2},{r:7,q:"dom7",b:1},{r:5,q:"dom7",b:1},{r:0,q:"dom7",b:1},{r:7,q:"dom7",b:1}]}
 ];
 
+/* steps are the subdivision grid a comping pattern is written on.
+   div = steps per BPM beat, so 6/8 counts the dotted quarter. */
+var TIMESIGS = [
+  {id:"2/4",  steps:4,  div:2, note:"two beats to the bar"},
+  {id:"3/4",  steps:6,  div:2, note:"waltz time"},
+  {id:"4/4",  steps:8,  div:2, note:"common time"},
+  {id:"5/4",  steps:10, div:2, note:"five beats to the bar"},
+  {id:"6/8",  steps:6,  div:3, note:"two dotted-quarter pulses, three eighths each"},
+  {id:"12/8", steps:12, div:3, note:"four dotted-quarter pulses — shuffle and slow blues"}
+];
+var STYLES = [
+  {id:"block",      name:"Block chords"},
+  {id:"pad",        name:"Sustained pad"},
+  {id:"strum",      name:"Strum"},
+  {id:"bassChord",  name:"Bass and chord"},
+  {id:"waltz",      name:"Waltz (bass, chord, chord)"},
+  {id:"charleston", name:"Charleston (syncopated)"},
+  {id:"arpUp",      name:"Arpeggio — up"},
+  {id:"arpUpDown",  name:"Arpeggio — up and down"},
+  {id:"alberti",    name:"Alberti bass"}
+];
+/* an event is {s:step, n:[midi], g:gain, roll:stagger, d:duration} */
+function styleEvents(id, steps, notes){
+  var ev = [], i, bass = notes[0], upper = notes.slice(1);
+  var mid = Math.floor(steps / 2);
+  if(id === "block"){
+    ev.push({s:0, n:notes, g:0.22, d:1.7});
+    if(steps >= 4) ev.push({s:mid, n:notes, g:0.14, d:1.4});
+  } else if(id === "pad"){
+    ev.push({s:0, n:notes, g:0.19, d:2.6});
+  } else if(id === "strum"){
+    ev.push({s:0, n:notes, g:0.22, roll:0.030, d:1.7});
+    if(steps >= 4) ev.push({s:mid, n:notes, g:0.15, roll:0.024, d:1.4});
+  } else if(id === "bassChord"){
+    ev.push({s:0, n:[bass], g:0.26, d:1.5});
+    for(i = 2; i < steps; i += 2) ev.push({s:i, n:upper, g:0.13, d:0.9});
+  } else if(id === "waltz"){
+    ev.push({s:0, n:[bass], g:0.26, d:1.5});
+    for(i = 2; i < steps; i += 2) ev.push({s:i, n:upper, g:0.14, roll:0.016, d:0.8});
+  } else if(id === "charleston"){
+    ev.push({s:0, n:notes, g:0.22, roll:0.02, d:1.6});
+    ev.push({s:Math.min(3, steps - 1), n:notes, g:0.17, roll:0.02, d:1.2});
+  } else if(id === "arpUp"){
+    for(i = 0; i < steps; i++) ev.push({s:i, n:[notes[i % notes.length]], g:0.2, d:0.85});
+  } else if(id === "arpUpDown"){
+    var seq = notes.concat(notes.slice(1, notes.length - 1).reverse());
+    if(!seq.length) seq = notes;
+    for(i = 0; i < steps; i++) ev.push({s:i, n:[seq[i % seq.length]], g:0.2, d:0.85});
+  } else if(id === "alberti"){
+    var top = notes.length - 1, midi = Math.max(1, Math.min(top - 1, 1));
+    var pat = [0, top, midi, top];
+    for(i = 0; i < steps; i++) ev.push({s:i, n:[notes[pat[i % 4]]], g:0.19, d:0.8});
+  }
+  return ev;
+}
+
 var state = {
   rootIdx:9, scaleId:"aeolian", tuneId:"std", nps:3, pos:0,
   sevenths:false, progId:"none", targets:true, pinned:null,
+  style:"block", ts:"4/4", inv:"smooth",
   labels:"note", showAll:true, lefty:false, piano:true, pkeys:"scale",
   bpm:72, div:3, dir:"updown", loop:true, metro:false, vol:0.7, playing:false
 };
@@ -766,46 +835,52 @@ function drawPiano(){
   shell.hidden = !state.piano;
   if(!state.piano) return;
 
-  var open = tuning().s, r = root(), degs = degList();
-  var iv = degs.map(function(d){ return d.semi; });
-  var lo = Math.min.apply(null, open);
-  var start = Math.floor(lo / 12) * 12;
-  var shapeMax = shape.notes.length ? Math.max.apply(null, shape.notes.map(function(n){ return n.midi; })) : start;
-  var end = Math.max(start + 60, Math.ceil((shapeMax + 1) / 12) * 12);
-  var inPos = {};
-  shape.notes.forEach(function(nt){ inPos[nt.midi] = true; });
+  var r = root(), degs = degList(), iv = degs.map(function(d){ return d.semi; });
+  var posPcs = {};
+  shape.notes.forEach(function(nt){ posPcs[nt.pc] = true; });
+  var voiced = currentVoicing(), vset = {};
+  if(voiced) voiced.forEach(function(m){ vset[m] = true; });
 
-  var W = 24, BW = 15, whites = 0, html = "", m, x = 0;
-  for(m = start; m <= end; m++) if(WHITE_PC.indexOf(m % 12) >= 0) whites++;
+  var W = 40, BW = 25, whites = 0, html = "", x = 0, m;
+  for(m = PIANO_LO; m <= PIANO_HI; m++){ if(WHITE_PC.indexOf(((m % 12) + 12) % 12) >= 0) whites++; }
 
-  for(m = start; m <= end; m++){
+  for(m = PIANO_LO; m <= PIANO_HI; m++){
     var pc = ((m % 12) + 12) % 12;
     var isWhite = WHITE_PC.indexOf(pc) >= 0;
     var rel = (((pc - r.pc) % 12) + 12) % 12;
     var di = iv.indexOf(rel);
     var deg = di >= 0 ? degs[di] : null;
+    /* with a chord up, the marker shows that chord's actual voicing —
+       which is how an inversion becomes visible. Otherwise it falls back
+       to the pitch classes in the guitar position. */
+    var marked = voiced ? !!vset[m] : !!(deg && posPcs[pc]);
     var cls = "pkey " + (isWhite ? "white" : "black"), off = false;
-    if(deg && inPos[m]){
-      cls += " " + tierOf({deg:deg}) + " inpos";
+
+    if(marked){
+      cls += " " + (deg ? tierOf({deg:deg}) : "chordtone") + " inpos";
     } else if(deg){
-      if(state.pkeys === "pos"){ cls += " off"; off = true; }
+      if(state.pkeys === "pos" && !posPcs[pc]){ cls += " off"; off = true; }
       else cls += " " + tierOf({deg:deg}) + " notpos";
     } else if(state.pkeys !== "all"){
       cls += " off"; off = true;
     }
+
     var lbl = "";
-    if(off || state.labels === "none") lbl = "";
-    else if(state.labels === "degree") lbl = deg ? pretty(deg.label) : "";
-    else lbl = deg ? spell(deg) : (isWhite ? SHARP[pc] : "");
+    if(!off && state.labels !== "none"){
+      if(state.labels === "degree") lbl = deg ? pretty(deg.label) : "";
+      else lbl = deg ? spell(deg) : (isWhite || marked ? SHARP[pc] : "");
+    }
     var nm = deg ? spell(deg) : SHARP[pc];
-    var oct = Math.floor(m / 12) - 1;
-    var title = nm + oct + (deg ? " · degree " + deg.label : " · outside the scale");
+    var title = nm + (Math.floor(m / 12) - 1) + (deg ? " · degree " + deg.label : " · outside the scale");
     var left = isWhite ? x : (x - BW / 2);
     html += '<button class="' + cls + '" style="left:' + left + 'px" data-midi="' + m +
-            '" title="' + title + '" aria-label="' + title + '">' + lbl + "</button>";
+            '" data-pc="' + pc + '" title="' + title + '" aria-label="' + title + '">' + lbl + "</button>";
     if(isWhite) x += W;
   }
   $("#pianoBoard").innerHTML = '<div class="keys" style="width:' + (whites * W) + 'px">' + html + "</div>";
+  $("#pianoLegend").textContent = voiced
+    ? "Ringed keys are the chord as it is actually voiced — change the inversion and watch them move."
+    : "Two octaves. Filled keys are the scale; ringed keys are the pitches in the position you are practising.";
 }
 
 /* ---------------- chords ---------------- */
@@ -883,6 +958,70 @@ function progHint(){
            " Aeolian rather than the major scale you have loaded.";
   }
   return "";
+}
+
+/* Voicings live inside the two displayed octaves, so what you hear is
+   exactly what lights up on the keyboard. */
+var PIANO_LO = 48, PIANO_HI = 72;          // C3 to C5
+function voiceOf(rootPc, q, inv){
+  var ints = QUAL[q].ints;
+  var base = PIANO_LO + ((((rootPc - PIANO_LO) % 12) + 12) % 12);
+  var notes = ints.map(function(i){ return base + i; });
+  var turns = ((Number(inv) || 0) % ints.length + ints.length) % ints.length;
+  for(var k = 0; k < turns; k++) notes.push(notes.shift() + 12);
+  notes.sort(function(a, b){ return a - b; });
+  var guard = 0;
+  while(notes[notes.length - 1] > PIANO_HI && guard++ < 4){
+    notes = notes.map(function(n){ return n - 12; });
+  }
+  guard = 0;
+  while(notes[0] < PIANO_LO && guard++ < 4){
+    notes = notes.map(function(n){ return n + 12; });
+  }
+  return notes;
+}
+/* "smooth" picks, for each chord, the inversion that moves least from the
+   chord before it — ordinary voice leading, and it makes the loop sing. */
+function computeVoicings(){
+  var ch = progChords(), out = [], prev = null;
+  ch.forEach(function(c){
+    var v;
+    if(state.inv === "smooth"){
+      var best = null, bestCost = 1e9;
+      for(var k = 0; k < QUAL[c.q].ints.length; k++){
+        var cand = voiceOf(c.rootPc, c.q, k);
+        var cost = prev
+          ? Math.abs(cand[0] - prev[0]) + Math.abs(cand[cand.length - 1] - prev[prev.length - 1])
+          : Math.abs(cand[0] - 55);
+        if(cost < bestCost){ bestCost = cost; best = cand; }
+      }
+      v = best;
+    } else {
+      v = voiceOf(c.rootPc, c.q, Number(state.inv));
+    }
+    prev = v;
+    out.push(v);
+  });
+  return out;
+}
+/* the chord whose voicing the keyboard should be showing right now */
+function currentVoicing(){
+  if(bk.playing){
+    var ch = progChords();
+    if(ch.length){
+      var vs = computeVoicings();
+      return vs[(bk.shown >= 0 ? bk.shown : 0) % vs.length];
+    }
+  }
+  if(state.pinned && state.pinned.chord){
+    var c = state.pinned.chord;
+    return voiceOf(c.rootPc, c.q, state.inv === "smooth" ? 0 : Number(state.inv));
+  }
+  return null;
+}
+function timesig(){
+  for(var i = 0; i < TIMESIGS.length; i++){ if(TIMESIGS[i].id === state.ts) return TIMESIGS[i]; }
+  return TIMESIGS[2];
 }
 
 function drawHarmony(){
@@ -1232,20 +1371,21 @@ function playNote(midi, when, gain){
   src.start(when || c.currentTime);
 }
 /* struck-string voice for the keyboard, so the two instruments stay distinguishable */
-function playTone(midi, when, gain){
+function playTone(midi, when, gain, dur){
   var c = ac(); if(!c) return;
   var t0 = when || c.currentTime;
+  var len = dur || 1.9;
   var f = 440 * Math.pow(2, (midi - 69) / 12);
   var g = c.createGain();
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(gain === undefined ? 0.5 : gain, t0 + 0.008);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.9);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
   g.connect(master);
   [[1, 1], [2, 0.4], [3, 0.16], [4, 0.07]].forEach(function(p){
     var o = c.createOscillator(); o.type = "sine"; o.frequency.value = f * p[0];
     var og = c.createGain(); og.gain.value = p[1];
     o.connect(og); og.connect(g);
-    o.start(t0); o.stop(t0 + 2);
+    o.start(t0); o.stop(t0 + len + 0.1);
   });
 }
 function click(when, strong){
@@ -1315,8 +1455,11 @@ function paint(){
     var nt = seq[cur.i];
     lastLit.forEach(function(el){ el.classList.remove("is-playing"); });
     lastLit = [];
-    [document.querySelector('.dot[data-idx="' + nt.order + '"]'),
-     document.querySelector('.pkey[data-midi="' + nt.midi + '"]')].forEach(function(el){
+    var lit = [document.querySelector('.dot[data-idx="' + nt.order + '"]')];
+    /* two octaves cannot hold the whole neck, so match the key by pitch class */
+    var keys = document.querySelectorAll('.pkey[data-pc="' + nt.pc + '"]');
+    for(var q = 0; q < keys.length; q++) lit.push(keys[q]);
+    lit.forEach(function(el){
       if(el){ el.classList.add("is-playing"); lastLit.push(el); }
     });
   }
@@ -1326,12 +1469,6 @@ function paint(){
 /* ---------------- backing loop ---------------- */
 var bk = {playing:false, timer:null, idx:0, nextTime:0, visQ:[], shown:-1};
 
-function voiceChord(rootPc, q){
-  var base = 55 + (((rootPc - 7) % 12) + 12) % 12;      // G3 up to F♯4
-  var notes = QUAL[q].ints.map(function(i){ return base + i; });
-  notes.push(base - 12);                                 // bass an octave below
-  return notes;
-}
 function markChordTones(pcs){
   var on = !!pcs;
   var set = {};
@@ -1378,28 +1515,30 @@ function bkStop(){
   $("#bkTxt").textContent = "Loop";
   var on = document.querySelectorAll(".bar.on");
   for(var i = 0; i < on.length; i++) on[i].classList.remove("on");
+  bk.shown = -1;
   applyMarks();
+  drawPiano();
 }
 function bkSched(){
   if(!bk.playing || !actx) return;
   var chords = progChords();
   if(!chords.length){ bkStop(); return; }
-  var beat = 60 / state.bpm;
-  while(bk.nextTime < actx.currentTime + 0.25){
-    var c = chords[bk.idx % chords.length];
-    var notes = voiceChord(c.rootPc, c.q);
-    /* comp on beats 1 and 3 of every bar so the loop breathes */
+  var ts = timesig(), stepSec = (60 / state.bpm) / ts.div;
+  var voicings = computeVoicings();
+  while(bk.nextTime < actx.currentTime + 0.3){
+    var i = bk.idx % chords.length;
+    var c = chords[i], notes = voicings[i];
     for(var b = 0; b < c.bars; b++){
-      for(var h = 0; h < 2; h++){
-        var t = bk.nextTime + (b * 4 + h * 2) * beat;
-        var g = h === 0 ? 0.22 : 0.14;
-        notes.forEach(function(m, j){
-          playTone(m, t + j * 0.012, g);
+      var barAt = bk.nextTime + b * ts.steps * stepSec;
+      styleEvents(state.style, ts.steps, notes).forEach(function(e){
+        var t = barAt + e.s * stepSec;
+        e.n.forEach(function(mn, j){
+          playTone(mn, t + j * (e.roll || 0), e.g, e.d);
         });
-      }
+      });
     }
-    bk.visQ.push({i:bk.idx % chords.length, t:bk.nextTime});
-    bk.nextTime += c.bars * 4 * beat;
+    bk.visQ.push({i:i, t:bk.nextTime});
+    bk.nextTime += c.bars * ts.steps * stepSec;
     bk.idx = (bk.idx + 1) % chords.length;
   }
 }
@@ -1416,6 +1555,7 @@ function bkPaint(){
       bars[i].classList.toggle("on", Number(bars[i].getAttribute("data-i")) === cur.i);
     }
     applyMarks();
+    drawPiano();
   }
   requestAnimationFrame(bkPaint);
 }
@@ -1505,6 +1645,21 @@ function buildControls(){
     if(bk.playing) bkStop();
     drawHarmony(); drawCircle(); applyMarks();
   };
+  $("#styleSel").innerHTML = STYLES.map(function(x){
+    return '<option value="' + x.id + '"' + (x.id === state.style ? " selected" : "") + ">" + x.name + "</option>";
+  }).join("");
+  $("#styleSel").onchange = function(){ state.style = this.value; };
+
+  $("#tsSel").innerHTML = TIMESIGS.map(function(x){
+    return '<option value="' + x.id + '" title="' + x.note + '"' +
+           (x.id === state.ts ? " selected" : "") + ">" + x.id + "</option>";
+  }).join("");
+  $("#tsSel").onchange = function(){ state.ts = this.value; };
+
+  seg($("#invSeg"),
+    [{v:"smooth",t:"Smooth"},{v:"0",t:"Root"},{v:"1",t:"1st"},{v:"2",t:"2nd"},{v:"3",t:"3rd"}],
+    state.inv, function(v){ state.inv = v; drawPiano(); });
+
   $("#bkBtn").onclick = function(){ if(bk.playing) bkStop(); else bkStart(); };
   $("#targets").onchange = function(){ state.targets = this.checked; applyMarks(); };
   $("#chordRow").addEventListener("click", function(e){
@@ -1516,14 +1671,16 @@ function buildControls(){
     if(state.pinned && state.pinned.src === "chord" && state.pinned.i === i){
       state.pinned = null;
     } else {
-      state.pinned = {src:"chord", i:i, pcs:c.pcs};
+      state.pinned = {src:"chord", i:i, pcs:c.pcs, chord:{rootPc:c.rootPc, q:c.q}};
       var t0 = ac() ? actx.currentTime : 0;
-      voiceChord(c.rootPc, c.q).forEach(function(m, j){ playTone(m, t0 + j * 0.02, 0.34); });
+      voiceOf(c.rootPc, c.q, state.inv === "smooth" ? 0 : Number(state.inv))
+        .forEach(function(m, j){ playTone(m, t0 + j * 0.02, 0.34); });
     }
     Array.prototype.forEach.call(this.children, function(el){
       el.setAttribute("aria-pressed", String(!!state.pinned && Number(el.getAttribute("data-i")) === i));
     });
     applyMarks();
+    drawPiano();
   });
 
   seg($("#pkSeg"),
