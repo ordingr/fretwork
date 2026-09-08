@@ -420,6 +420,10 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
       <div class="seg" id="divSeg" role="group" aria-labelledby="divLbl"></div>
     </div>
     <div class="t-group">
+      <span class="ctl-label" style="margin:0" id="patLbl">Pattern</span>
+      <div class="seg" id="patSeg" role="group" aria-labelledby="patLbl"></div>
+    </div>
+    <div class="t-group">
       <span class="ctl-label" style="margin:0" id="dirLbl">Direction</span>
       <div class="seg" id="dirSeg" role="group" aria-labelledby="dirLbl"></div>
     </div>
@@ -485,6 +489,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
         <li>Say the degree out loud as you play it &mdash; the shape sticks faster when you know what note you are on.</li>
         <li>Move dot labels to <em>Degrees</em> once the note names are automatic, then to <em>None</em>.</li>
         <li>Shift without stopping: position 3 ascending straight into position 4 descending.</li>
+        <li>Loop a progression and set Pattern to <em>Arpeggio</em> &mdash; the guitar then follows the chords, one arpeggio per bar.</li>
         <li><kbd>Space</kbd> play/stop &middot; <kbd>&larr;</kbd> <kbd>&rarr;</kbd> position &middot; <kbd>&uarr;</kbd> <kbd>&darr;</kbd> tempo</li>
       </ul>
     </div>
@@ -683,7 +688,7 @@ function styleEvents(id, steps, notes){
 var state = {
   rootIdx:9, scaleId:"aeolian", tuneId:"std", nps:3, pos:0,
   sevenths:false, progId:"none", targets:true, pinned:null,
-  style:"block", ts:"4/4", inv:"smooth",
+  style:"block", ts:"4/4", inv:"smooth", playWhat:"scale",
   labels:"note", showAll:true, lefty:false, piano:true, pkeys:"scale",
   bpm:72, div:3, dir:"updown", loop:true, metro:false, vol:0.7, playing:false
 };
@@ -1065,6 +1070,39 @@ function timesig(){
   return TIMESIGS[2];
 }
 
+/* Pentatonic, blues and the symmetric scales have no stack of thirds, but
+   they still contain a tonic chord — build it from the scale's own degrees. */
+function tonicChordFromScale(){
+  var degs = degList(), iv = degs.map(function(d){ return d.semi; });
+  var has = function(x){ return iv.indexOf(x) >= 0; };
+  var third = has(4) ? 4 : has(3) ? 3 : null;
+  var fifth = has(7) ? 7 : has(8) ? 8 : has(6) ? 6 : null;   // #5 before b5, so whole tone reads as augmented
+  if(third === null || fifth === null) return null;
+  var ints = [0, third, fifth];
+  if(state.sevenths){
+    var sev = has(11) ? 11 : has(10) ? 10 : null;
+    if(sev !== null) ints.push(sev);
+  }
+  var r = root(), q = null, key = ints.join(",");
+  for(var name in QUAL){ if(QUAL[name].ints.join(",") === key){ q = name; break; } }
+  return {
+    rootPc:r.pc, q:q || "maj",
+    sym:spell(degs[0]) + (q ? QUAL[q].sym : ""),
+    pcs:ints.map(function(x){ return (r.pc + x) % 12; })
+  };
+}
+/* what the guitar arpeggiates: whatever chord is currently in force */
+function activeChord(){
+  if(bk.playing){
+    var ch = progChords();
+    if(ch.length) return ch[(bk.shown >= 0 ? bk.shown : 0) % ch.length];
+  }
+  var dia = diatonicChords();
+  if(state.pinned && dia && dia[state.pinned.i]) return dia[state.pinned.i];
+  if(dia && dia.length) return dia[0];
+  return tonicChordFromScale();
+}
+
 function drawHarmony(){
   var chords = diatonicChords();
   var row = $("#chordRow"), note = $("#chordNote");
@@ -1324,9 +1362,29 @@ function drawBoard(){
       '<div class="track">' + nums + "</div>" +
     "</div>";
 
-  $("#hint").innerHTML = shape.complete
-    ? "Tap any dot to hear it. Scroll sideways for the upper frets."
-    : '<span class="warn">This position runs past fret ' + MAXFRET + " &mdash; notes off the end of the neck are hidden.</span>";
+  updateHint();
+}
+
+function updateHint(){
+  if(!shape.complete){
+    $("#hint").innerHTML = '<span class="warn">This position runs past fret ' + MAXFRET +
+      " &mdash; notes off the end of the neck are hidden.</span>";
+    return;
+  }
+  if(state.playWhat === "arp"){
+    var c = activeChord();
+    var n = 0;
+    if(c){
+      var set = {};
+      c.pcs.forEach(function(p){ set[p] = true; });
+      n = shape.notes.filter(function(nt){ return set[nt.pc]; }).length;
+    }
+    $("#hint").innerHTML = c && n >= 2
+      ? "Play runs the <b>" + c.sym + "</b> arpeggio inside this position &mdash; " + n + " notes."
+      : "No arpeggio for this chord sits inside the position, so Play runs the scale.";
+    return;
+  }
+  $("#hint").innerHTML = "Tap any dot to hear it. Scroll sideways for the upper frets.";
 }
 
 function drawPositions(){
@@ -1444,6 +1502,15 @@ function click(when, strong){
 var seq = [], step = 0, nextTime = 0, timer = null, visQ = [], lastLit = [], endAt = null;
 function buildSequence(){
   var up = shape.notes.slice();
+  if(state.playWhat === "arp"){
+    var c = activeChord();
+    if(c){
+      var set = {};
+      c.pcs.forEach(function(p){ set[p] = true; });
+      var only = up.filter(function(nt){ return set[nt.pc]; });
+      if(only.length >= 2) up = only;   // keep the scale if the shape has no arpeggio in it
+    }
+  }
   if(state.dir === "up") seq = up;
   else if(state.dir === "down") seq = up.slice().reverse();
   else seq = up.concat(up.slice(1, up.length - 1).reverse());
@@ -1605,6 +1672,11 @@ function bkPaint(){
     }
     applyMarks();
     drawPiano();
+    updateHint();
+    if(state.playing && state.playWhat === "arp"){
+      step = 0;          // each chord starts its arpeggio from the bottom
+      buildSequence();
+    }
     bk.lit = [];        // the redraw dropped the old elements
     hit = hit || bk.lastHit;
   }
@@ -1740,6 +1812,8 @@ function buildControls(){
     });
     applyMarks();
     drawPiano();
+    updateHint();
+    if(state.playing && state.playWhat === "arp") buildSequence();
   });
 
   seg($("#pkSeg"),
@@ -1753,6 +1827,13 @@ function buildControls(){
   seg($("#divSeg"),
     [{v:1,t:"1/4"},{v:2,t:"1/8"},{v:3,t:"Triplets"},{v:4,t:"1/16"}],
     state.div, function(v){ state.div = v; });
+
+  seg($("#patSeg"), [{v:"scale",t:"Scale"},{v:"arp",t:"Arpeggio"}],
+    state.playWhat, function(v){
+      state.playWhat = v; step = 0;
+      if(state.playing) buildSequence();
+      updateHint();
+    });
 
   seg($("#dirSeg"),
     [{v:"up",t:"Up"},{v:"down",t:"Down"},{v:"updown",t:"Up &amp; down"}],

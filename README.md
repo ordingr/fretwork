@@ -24,7 +24,7 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 Each progression is also drawn on the circle of fifths as root motion. ii–V–I is three adjacent slices stepping anticlockwise; the diatonic circle is a full loop with one long diagonal across it, the tritone jump where the key runs out of perfect fifths.
 
-**Playback** — plays the position with a Karplus–Strong plucked-string voice, following each note on both instruments. 40–220 BPM, quarters/eighths/triplets/sixteenths, up / down / up-and-down, loop, metronome. Click any dot or key to hear it alone.
+**Playback** — plays the position with a Karplus–Strong plucked-string voice, following each note on both instruments. **Pattern** switches between running the scale and running the **arpeggio** of whatever chord is in force — and if a progression is looping, the arpeggio follows it, restarting from the bottom on each chord. Scales without a stack of thirds still get one: a tonic chord is derived from the scale's own degrees, so minor pentatonic arpeggiates Am and whole tone arpeggiates A+. 40–220 BPM, quarters/eighths/triplets/sixteenths, up / down / up-and-down, loop, metronome. Click any dot or key to hear it alone.
 
 **20 scales** — all seven major modes, harmonic and melodic minor, phrygian dominant, lydian dominant, altered, both pentatonics, minor and major blues, whole tone, both diminished scales, and chromatic.
 
