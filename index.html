@@ -472,6 +472,10 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
       <label class="sw"><input type="checkbox" id="metro"><span>Click</span></label>
     </div>
     <div class="t-group">
+      <label class="ctl-label" style="margin:0" for="leadSel">Neck sound</label>
+      <select id="leadSel" style="min-width:150px"></select>
+    </div>
+    <div class="t-group">
       <label class="ctl-label" style="margin:0" for="vol">Volume</label>
       <input type="range" id="vol" min="0" max="100" step="1" value="70" style="width:96px">
     </div>
@@ -505,6 +509,8 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
       <label class="sw"><input type="checkbox" id="targets" checked><span>Mark chord tones</span></label>
     </div>
     <div class="harm-row">
+      <label class="ctl-label" for="chordSel">Chord sound</label>
+      <select id="chordSel" style="min-width:150px"></select>
       <label class="ctl-label" for="styleSel">Feel</label>
       <select id="styleSel"></select>
       <label class="ctl-label" for="tsSel">Time</label>
@@ -519,6 +525,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
   <section class="cards">
     <div class="panel card">
       <h2>Circle of fifths</h2>
+      <label class="sw" style="margin-bottom:2px"><input type="checkbox" id="lockKey"><span>Lock key &mdash; click to hear chords</span></label>
       <svg class="cof" id="cof" viewBox="-124 -124 248 248" role="img" aria-label="Circle of fifths"></svg>
       <p class="cof-note" id="cofNote"></p>
     </div>
@@ -551,7 +558,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
     </div>
   </section>
 
-  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 987d874</span></footer>
+  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 9264c8d</span></footer>
 </div>
 
 <script>
@@ -746,6 +753,7 @@ var state = {
   sevenths:false, progId:"none", targets:true, pinned:null,
   style:"block", ts:"4/4", inv:"smooth", playWhat:"scale",
   identify:false, held:[], showAllHits:false,
+  leadInst:"guitar", chordInst:"piano", lockKey:false,
   labels:"note", showAll:true, lefty:false, piano:true, pkeys:"scale",
   bpm:72, div:3, dir:"updown", loop:true, metro:false, vol:0.7, playing:false
 };
@@ -1473,6 +1481,12 @@ function drawCircle(){
     if(minPc === r.pc){
       svg += '<path d="' + arcPath(46, 82, a0, a1) + '" fill="none" stroke="var(--accent)" stroke-width="2.5"></path>';
     }
+    if(state.pinned && state.pinned.src === "circle"){
+      if(state.pinned.ring === "maj" && state.pinned.pc === seg.pc)
+        svg += '<path d="' + arcPath(82, 112, a0, a1) + '" fill="none" stroke="var(--key-mark)" stroke-width="3"></path>';
+      if(state.pinned.ring === "min" && state.pinned.pc === minPc)
+        svg += '<path d="' + arcPath(46, 82, a0, a1) + '" fill="none" stroke="var(--key-mark)" stroke-width="3"></path>';
+    }
     svg += '<text class="cof-lbl" x="' + ox + '" y="' + oy + '" fill="' + ink + '"' +
            (seg.alt ? ' style="font-size:8px"' : "") + ">" +
            (seg.alt ? seg.maj + "/" + seg.alt : seg.maj) + "</text>";
@@ -1718,8 +1732,31 @@ function ac(){
   if(actx.state === "suspended") actx.resume();
   return actx;
 }
-function pluck(midi){
-  if(bufs[midi]) return bufs[midi];
+var INSTRUMENTS = [
+  {id:"guitar", name:"Guitar (plucked)",  type:"pluck", damp:0.9955, tone:5200},
+  {id:"nylon",  name:"Nylon guitar",      type:"pluck", damp:0.9930, tone:3000},
+  {id:"piano",  name:"Piano",             type:"add", atk:0.006, dec:1.9,
+                partials:[[1,1],[2,0.40],[3,0.16],[4,0.07]]},
+  {id:"rhodes", name:"Electric piano",    type:"add", atk:0.005, dec:2.6,
+                partials:[[1,1],[2,0.28],[4,0.20],[7,0.05]]},
+  {id:"bells",  name:"Bells",             type:"add", atk:0.003, dec:3.6,
+                partials:[[1,1],[2.76,0.45],[5.40,0.22],[8.93,0.08]]},
+  {id:"organ",  name:"Organ (sustains)",  type:"add", atk:0.02, rel:0.10, hold:true,
+                partials:[[0.5,0.4],[1,1],[2,0.5],[3,0.35],[4,0.22],[6,0.10],[8,0.06]]},
+  {id:"strings",name:"Strings (sustains)",type:"add", atk:0.20, rel:0.38, hold:true, detune:7,
+                partials:[[1,1],[2,0.45],[3,0.26],[4,0.14],[5,0.07]]},
+  {id:"choir",  name:"Choir (sustains)",  type:"add", atk:0.26, rel:0.50, hold:true, detune:9, vib:7,
+                partials:[[1,1],[2,0.34],[3,0.22],[4,0.13],[5,0.06]]},
+  {id:"pad",    name:"Soft pad (sustains)", type:"add", atk:0.45, rel:0.7, hold:true, detune:11,
+                partials:[[1,1],[2,0.30],[3,0.12],[5,0.05]]}
+];
+function instr(id){
+  for(var i = 0; i < INSTRUMENTS.length; i++){ if(INSTRUMENTS[i].id === id) return INSTRUMENTS[i]; }
+  return INSTRUMENTS[0];
+}
+function pluck(midi, ins){
+  var key = ins.id + ":" + midi;
+  if(bufs[key]) return bufs[key];
   var c = ac(); if(!c) return null;
   var sr = c.sampleRate, freq = 440 * Math.pow(2, (midi - 69) / 12);
   var N = Math.max(2, Math.round(sr / freq));
@@ -1728,7 +1765,7 @@ function pluck(midi){
   var buf = c.createBuffer(1, len, sr), d = buf.getChannelData(0);
   var ring = new Float32Array(N), prev = 0, i, j, k;
   for(i = 0; i < N; i++){ var w = Math.random() * 2 - 1; prev = prev * 0.55 + w * 0.45; ring[i] = prev; }
-  var damp = 0.9955 - Math.min(0.004, freq / 200000);
+  var damp = ins.damp - Math.min(0.004, freq / 200000);
   for(j = 0; j < len; j++){
     var idx = j % N, cur = ring[idx], nxt = ring[(idx + 1) % N];
     d[j] = cur;
@@ -1736,35 +1773,79 @@ function pluck(midi){
   }
   var tail = Math.floor(sr * 0.06);
   for(k = 0; k < tail; k++) d[len - 1 - k] *= k / tail;
-  bufs[midi] = buf;
+  bufs[key] = buf;
   return buf;
 }
-function playNote(midi, when, gain){
-  var c = ac(); if(!c) return;
-  var b = pluck(midi); if(!b) return;
-  var src = c.createBufferSource(); src.buffer = b;
-  var g = c.createGain(); g.gain.value = (gain === undefined ? 0.85 : gain);
-  var lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5200;
-  src.connect(lp); lp.connect(g); g.connect(master);
-  src.start(when || c.currentTime);
-}
-/* struck-string voice for the keyboard, so the two instruments stay distinguishable */
-function playTone(midi, when, gain, dur){
-  var c = ac(); if(!c) return;
+/* One voice. Sustaining instruments hold until released; plucked and struck
+   ones ring out on their own, which is what those instruments actually do. */
+function startVoice(midi, when, gain, instId){
+  var c = ac(); if(!c) return null;
+  var ins = instr(instId);
   var t0 = when || c.currentTime;
-  var len = dur || 1.9;
-  var f = 440 * Math.pow(2, (midi - 69) / 12);
   var g = c.createGain();
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(gain === undefined ? 0.5 : gain, t0 + 0.008);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
   g.connect(master);
-  [[1, 1], [2, 0.4], [3, 0.16], [4, 0.07]].forEach(function(p){
-    var o = c.createOscillator(); o.type = "sine"; o.frequency.value = f * p[0];
-    var og = c.createGain(); og.gain.value = p[1];
+  var nodes = [], oscs = [];
+
+  if(ins.type === "pluck"){
+    var b = pluck(midi, ins); if(!b) return null;
+    var src = c.createBufferSource(); src.buffer = b;
+    var lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = ins.tone;
+    g.gain.setValueAtTime(gain, t0);
+    src.connect(lp); lp.connect(g);
+    src.start(t0); nodes.push(src);
+    return {g:g, nodes:nodes, ins:ins, holds:false};
+  }
+
+  var f = 440 * Math.pow(2, (midi - 69) / 12);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), t0 + ins.atk);
+  if(!ins.hold) g.gain.exponentialRampToValueAtTime(0.0001, t0 + ins.dec);
+  ins.partials.forEach(function(pr){
+    var o = c.createOscillator();
+    o.frequency.value = f * pr[0];
+    if(ins.detune) o.detune.value = (Math.random() * 2 - 1) * ins.detune;
+    var og = c.createGain(); og.gain.value = pr[1];
     o.connect(og); og.connect(g);
-    o.start(t0); o.stop(t0 + len + 0.1);
+    o.start(t0);
+    nodes.push(o); oscs.push(o);
   });
+  if(ins.vib){
+    var lfo = c.createOscillator(); lfo.frequency.value = 5.1;
+    var lg = c.createGain(); lg.gain.value = ins.vib;
+    lfo.connect(lg);
+    oscs.forEach(function(o){ lg.connect(o.detune); });
+    lfo.start(t0); nodes.push(lfo);
+  }
+  if(!ins.hold){
+    nodes.forEach(function(n){ try{ n.stop(t0 + ins.dec + 0.1); }catch(e){} });
+  }
+  return {g:g, nodes:nodes, ins:ins, holds:!!ins.hold};
+}
+function stopVoice(v, when){
+  if(!v || !actx) return;
+  var t = when || actx.currentTime;
+  var rel = v.ins.rel || 0.10;
+  try{
+    v.g.gain.cancelScheduledValues(t);
+    v.g.gain.setValueAtTime(Math.max(0.0001, v.g.gain.value), t);
+    v.g.gain.exponentialRampToValueAtTime(0.0001, t + rel);
+  }catch(e){}
+  v.nodes.forEach(function(n){ try{ n.stop(t + rel + 0.05); }catch(e){} });
+}
+/* a note of a known length: sustaining voices are released at the end of it */
+function playFor(midi, when, gain, dur, instId){
+  var v = startVoice(midi, when, gain, instId);
+  if(v && v.holds){
+    var t0 = when || (actx ? actx.currentTime : 0);
+    stopVoice(v, t0 + (dur || 1.6));
+  }
+  return v;
+}
+function playNote(midi, when, gain){
+  return playFor(midi, when, gain === undefined ? 0.85 : gain, 1.8, state.leadInst);
+}
+function playTone(midi, when, gain, dur){
+  return playFor(midi, when, gain === undefined ? 0.5 : gain, dur || 1.9, state.chordInst);
 }
 function click(when, strong){
   var c = ac(); if(!c) return;
@@ -2057,6 +2138,17 @@ function buildControls(){
     if(bk.playing) bkStop();
     drawHarmony(); drawCircle(); applyMarks();
   };
+  var instOptions = function(cur){
+    return INSTRUMENTS.map(function(x){
+      return '<option value="' + x.id + '"' + (x.id === cur ? " selected" : "") + ">" + x.name + "</option>";
+    }).join("");
+  };
+  $("#leadSel").innerHTML = instOptions(state.leadInst);
+  $("#leadSel").onchange = function(){ state.leadInst = this.value; };
+  $("#chordSel").innerHTML = instOptions(state.chordInst);
+  $("#chordSel").onchange = function(){ state.chordInst = this.value; playChordNow(); };
+  $("#lockKey").onchange = function(){ state.lockKey = this.checked; };
+
   $("#styleSel").innerHTML = STYLES.map(function(x){
     return '<option value="' + x.id + '"' + (x.id === state.style ? " selected" : "") + ">" + x.name + "</option>";
   }).join("");
@@ -2149,14 +2241,29 @@ function buildControls(){
     step = 0;
     render();
   });
-  $("#board").addEventListener("click", function(e){
-    var b = e.target.closest(".dot"); if(!b) return;
-    playNote(Number(b.getAttribute("data-midi")));
+
+  /* hold a key and a sustaining voice keeps sounding until you let go */
+  var heldVoice = null;
+  function releaseHeld(){ if(heldVoice){ stopVoice(heldVoice); heldVoice = null; } }
+  $("#pianoBoard").addEventListener("pointerdown", function(e){
+    var k = e.target.closest(".pkey"); if(!k) return;
+    releaseHeld();
+    heldVoice = startVoice(Number(k.getAttribute("data-midi")), undefined, 0.5, state.chordInst);
   });
+  $("#board").addEventListener("pointerdown", function(e){
+    var d = e.target.closest(".dot"); if(!d) return;
+    releaseHeld();
+    heldVoice = startVoice(Number(d.getAttribute("data-midi")), undefined, 0.85, state.leadInst);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function(ev){
+    $("#pianoBoard").addEventListener(ev, releaseHeld);
+    $("#board").addEventListener(ev, releaseHeld);
+  });
+  window.addEventListener("pointerup", releaseHeld);
+
   $("#pianoBoard").addEventListener("click", function(e){
     var k = e.target.closest(".pkey"); if(!k) return;
     var m = Number(k.getAttribute("data-midi"));
-    playTone(m);
     if(state.identify){
       var at = state.held.indexOf(m);
       if(at >= 0) state.held.splice(at, 1); else state.held.push(m);
@@ -2165,7 +2272,8 @@ function buildControls(){
       drawPiano(); drawIdentify(); drawBoard(); applyMarks();
       return;
     }
-    /* not identifying — show the note on the neck briefly, then let it go */
+    /* not identifying — show the note on the neck briefly, then let it go.
+       The sound already started on pointerdown. */
     pianoFlash = [m];
     if(pianoFlashTimer) clearTimeout(pianoFlashTimer);
     drawBoard(); applyMarks();
@@ -2201,6 +2309,20 @@ function buildControls(){
   });
   $("#cof").addEventListener("click", function(e){
     var seg = e.target.closest(".cof-seg"); if(!seg) return;
+    if(state.lockKey){
+      var pc = Number(seg.getAttribute("data-pc"));
+      var ring = seg.getAttribute("data-ring");
+      var q = ring === "min" ? (state.sevenths ? "min7" : "min") : (state.sevenths ? "maj7" : "maj");
+      var c = {rootPc:pc, q:q, sym:pcLabel(pc) + QUAL[q].sym,
+               pcs:QUAL[q].ints.map(function(x){ return (pc + x) % 12; })};
+      state.pinned = {src:"circle", pc:pc, ring:ring, pcs:c.pcs, chord:{rootPc:pc, q:q}, full:c};
+      var t0 = ac() ? actx.currentTime : 0;
+      voiceOf(pc, q, state.inv === "smooth" ? 0 : Number(state.inv))
+        .forEach(function(m, j){ playTone(m, t0 + j * 0.02, 0.34); });
+      drawBoard(); drawPiano(); drawHarmony(); drawCircle(); applyMarks(); updateHint();
+      if(state.playing && state.playWhat === "arp") buildSequence();
+      return;
+    }
     state.rootIdx = Number(seg.getAttribute("data-pc"));
     if(seg.getAttribute("data-ring") === "min"){
       state.scaleId = "aeolian";

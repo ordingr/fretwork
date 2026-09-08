@@ -30,6 +30,10 @@ Each progression is also drawn on the circle of fifths as root motion. ii–V–
 
 **Playback** — plays the position with a Karplus–Strong plucked-string voice, following each note on both instruments. **Pattern** switches between running the scale and running the **arpeggio** of whatever chord is in force — and if a progression is looping, the arpeggio follows it, restarting from the bottom on each chord. Scales without a stack of thirds still get one: a tonic chord is derived from the scale's own degrees, so minor pentatonic arpeggiates Am and whole tone arpeggiates A+. 40–220 BPM, quarters/eighths/triplets/sixteenths, up / down / up-and-down, loop, metronome. Click any dot or key to hear it alone.
 
+**Sounds** — nine voices across two independent pickers, one for the neck and one for chords: plucked and nylon guitar, piano, electric piano, bells, and four that sustain — organ, strings, choir and a soft pad. **Press and hold** any key or fret dot and a sustaining voice keeps sounding until you let go; plucked and struck voices ring out on their own, as they should.
+
+**Lock key** — by default clicking the circle of fifths jumps to that key. Lock it and the circle becomes a chord palette instead: click the outer ring for major, the inner for minor, and hear it, with the notes lit on both the keyboard and the neck. Sevenths follow the Triads/Sevenths switch.
+
 **20 scales** — all seven major modes, harmonic and melodic minor, phrygian dominant, lydian dominant, altered, both pentatonics, minor and major blues, whole tone, both diminished scales, and chromatic.
 
 **Chromatic mode** switches to the exercise people actually practise: a four-fret window on every string, one finger per fret, movable up the neck.
