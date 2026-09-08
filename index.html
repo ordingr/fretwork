@@ -224,6 +224,10 @@ select:hover{border-color:var(--accent)}
 .pkey.black.is-hit{background:linear-gradient(180deg,#5A3A36,#2A1614)}
 .pkey.is-hit::before{transform:scale(1.22)}
 .pkey.is-playing{box-shadow:0 0 0 2px var(--dot-root), 0 0 15px rgba(216,164,79,.85); z-index:3}
+/* a key you are holding down reads as pressed */
+.pkey.held{transform:translateY(3px)}
+.pkey.white.held{box-shadow:inset 0 0 0 2.5px #34302A, 0 1px 2px rgba(0,0,0,.5)}
+.pkey.black.held{box-shadow:inset 0 0 0 2.5px #E8E2D4, 0 1px 2px rgba(0,0,0,.6)}
 .piano-head{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-bottom:2px}
 .piano-head .ctl-label{margin:0}
 .piano-legend{margin:0; font-size:12px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
@@ -312,6 +316,29 @@ input[type="range"]::-moz-range-thumb{width:13px; height:13px; border-radius:50%
 .cof-step{font-family:"IBM Plex Mono",monospace; font-size:7px; font-weight:600; fill:var(--ink);
   text-anchor:middle; dominant-baseline:central; pointer-events:none}
 .cof-stop.first + .cof-step{fill:var(--dot-root-ink)}
+
+/* ---- identify: work backwards from held keys ---- */
+.identify{padding:14px 18px 16px; display:flex; flex-direction:column; gap:12px}
+.identify[hidden]{display:none}
+.held-notes{display:flex; gap:5px; flex-wrap:wrap; align-items:center; min-height:30px}
+.held-note{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600; color:var(--ink);
+  background:var(--surface-2); border:1px solid var(--line-2); border-radius:6px; padding:5px 9px}
+.held-note.bass{border-color:var(--accent); color:var(--accent)}
+.held-empty{font-size:13px; color:var(--ink-3)}
+.chord-answer{margin:0; font-size:15px; color:var(--ink); text-wrap:pretty}
+.chord-answer b{font-family:"IBM Plex Mono",monospace; font-size:17px; letter-spacing:-.01em}
+.chord-answer .alt{display:block; margin-top:4px; font-size:13px; color:var(--ink-3)}
+.hits{display:flex; gap:5px; flex-wrap:wrap; max-height:184px; overflow-y:auto}
+.hit{font-family:"IBM Plex Sans",sans-serif; font-size:12.5px; cursor:pointer; text-align:left;
+  border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink-2);
+  border-radius:6px; padding:5px 9px; display:flex; gap:7px; align-items:baseline}
+.hit:hover{border-color:var(--accent); color:var(--ink)}
+.hit .rn{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--accent); font-weight:600}
+.hit.tonic{box-shadow:inset 0 -2px 0 var(--dot-root)}
+.hit-more{font-size:12.5px; color:var(--ink-3); align-self:center}
+.btn-sm{font-family:"IBM Plex Sans",sans-serif; font-size:12.5px; color:var(--ink-2); cursor:pointer;
+  background:var(--surface-2); border:1px solid var(--line-2); border-radius:6px; padding:5px 11px}
+.btn-sm:hover{border-color:var(--accent); color:var(--ink)}
 
 .cards{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(262px,1fr))}
 .card{padding:16px 18px 18px}
@@ -402,6 +429,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
     <div class="piano-head">
       <span class="ctl-label" id="pkLbl">Keyboard shows</span>
       <div class="seg" id="pkSeg" role="group" aria-labelledby="pkLbl"></div>
+      <label class="sw"><input type="checkbox" id="identifyMode"><span>Hold keys to identify</span></label>
     </div>
     <div class="piano-scroll"><div class="piano" id="pianoBoard"></div></div>
     <p class="piano-legend" id="pianoLegend"></p>
@@ -441,6 +469,20 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
       <label class="ctl-label" style="margin:0" for="vol">Volume</label>
       <input type="range" id="vol" min="0" max="100" step="1" value="70" style="width:96px">
     </div>
+  </section>
+
+  <section class="panel identify" id="identify" aria-label="Identify" hidden>
+    <div class="harm-row">
+      <span class="ctl-label" style="margin:0">Holding</span>
+      <div class="held-notes" id="heldNotes"></div>
+      <button class="btn-sm" id="clearHeld">Clear</button>
+    </div>
+    <p class="chord-answer" id="chordAnswer"></p>
+    <div class="harm-row">
+      <span class="ctl-label" style="margin:0">Scales that contain them</span>
+      <span class="hit-more" id="hitCount"></span>
+    </div>
+    <div class="hits" id="scaleHits"></div>
   </section>
 
   <section class="panel harmony" aria-label="Chords and progressions">
@@ -502,7 +544,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
     </div>
   </section>
 
-  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build dca4495</span></footer>
+  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 3d8cdfd</span></footer>
 </div>
 
 <script>
@@ -696,6 +738,7 @@ var state = {
   rootIdx:9, scaleId:"aeolian", tuneId:"std", nps:3, pos:0,
   sevenths:false, progId:"none", targets:true, pinned:null,
   style:"block", ts:"4/4", inv:"smooth", playWhat:"scale",
+  identify:false, held:[], showAllHits:false,
   labels:"note", showAll:true, lefty:false, piano:true, pkeys:"scale",
   bpm:72, div:3, dir:"updown", loop:true, metro:false, vol:0.7, playing:false
 };
@@ -849,7 +892,7 @@ function render(){
   posShapes = [];
   for(var p = 0; p < posCount(); p++) posShapes.push(buildShape(p));
   shape = posShapes[state.pos];
-  drawBoard(); drawPiano(); drawHarmony(); drawCircle(); drawPositions(); drawShapeCard(); drawReadout();
+  drawBoard(); drawPiano(); drawIdentify(); drawHarmony(); drawCircle(); drawPositions(); drawShapeCard(); drawReadout();
   applyMarks();
   if(state.playing) buildSequence();
 }
@@ -921,6 +964,7 @@ function drawPiano(){
     var nm = deg ? spell(deg) : SHARP[pc];
     var title = nm + (Math.floor(m / 12) - 1) + (deg ? " · degree " + deg.label : " · outside the scale");
     var left = isWhite ? x : (x - BW / 2);
+    if(state.held.indexOf(m) >= 0) cls += " held";
     var ordTxt = (marked && ord && ord[m]) ? String(ord[m]) : "";
     html += '<button class="' + cls + '" style="left:' + left + 'px" data-midi="' + m +
             '" data-pc="' + pc + '" data-ord="' + ordTxt + '" title="' + title +
@@ -1109,6 +1153,55 @@ function activeChord(){
   return tonicChordFromScale();
 }
 
+var HIT_CAP = 21;
+function drawIdentify(){
+  var panel = $("#identify");
+  panel.hidden = !state.identify;
+  if(!state.identify) return;
+
+  var held = state.held.slice().sort(function(a, b){ return a - b; });
+  $("#heldNotes").innerHTML = held.length
+    ? held.map(function(m, i){
+        return '<span class="held-note' + (i === 0 ? " bass" : "") + '">' +
+               pcLabel(((m % 12) + 12) % 12) + (Math.floor(m / 12) - 1) + "</span>";
+      }).join("")
+    : '<span class="held-empty">Click keys on the keyboard to hold them down.</span>';
+
+  var id = identify(held);
+  var ans = $("#chordAnswer");
+  if(!id){
+    ans.innerHTML = '<span class="held-empty">Two or more notes will name a chord.</span>';
+    $("#scaleHits").innerHTML = ""; $("#hitCount").textContent = "";
+    return;
+  }
+  if(id.kind === "note") ans.innerHTML = "<b>" + id.text + "</b> &mdash; one note. Add another.";
+  else if(id.kind === "interval") ans.innerHTML = "<b>" + id.text + "</b>";
+  else if(id.kind === "none") ans.innerHTML = "<b>No standard chord</b> &mdash; these notes do not stack into one.";
+  else {
+    ans.innerHTML = "<b>" + id.text + "</b> &mdash; " + id.desc +
+      (id.alts.length ? '<span class="alt">Could also be read as ' + id.alts.join(" or ") + ".</span>" : "");
+  }
+
+  var hits = matchingScales(id.pcs);
+  var rootPc = id.rootPc !== undefined ? id.rootPc : id.pcs[0];
+  hits.sort(function(a, b){
+    if((b.rootPc === rootPc) - (a.rootPc === rootPc)) return (b.rootPc === rootPc) - (a.rootPc === rootPc);
+    if(!!b.rn - !!a.rn) return !!b.rn - !!a.rn;
+    return a.order - b.order || a.rootPc - b.rootPc;
+  });
+  var shown = state.showAllHits ? hits : hits.slice(0, HIT_CAP);
+  $("#scaleHits").innerHTML = shown.map(function(h){
+    return '<button class="hit' + (h.rootPc === rootPc ? " tonic" : "") +
+      '" data-root="' + h.rootPc + '" data-scale="' + h.scaleId + '">' + h.name +
+      (h.rn ? '<span class="rn">' + h.rn + "</span>" : "") + "</button>";
+  }).join("") + (hits.length > shown.length
+    ? '<button class="btn-sm" id="moreHits">+' + (hits.length - shown.length) + " more</button>"
+    : "");
+  $("#hitCount").textContent = hits.length
+    ? hits.length + (hits.length === 1 ? " scale" : " scales") + " — click one to load it and see its chords"
+    : "none — no scale in the library holds all of these";
+}
+
 function drawHarmony(){
   var chords = diatonicChords();
   var row = $("#chordRow"), note = $("#chordNote");
@@ -1138,6 +1231,143 @@ function drawHarmony(){
   var hint = progHint();
   $("#progNote").textContent = hint;
   $("#progNote").hidden = !hint;
+}
+
+/* ---------------- identify: notes in, names out ---------------- */
+/* Ordered commonest first — ties in the matcher break toward the top. */
+var CHORD_TYPES = [
+  {i:[0,4,7],        n:"",        d:"major"},
+  {i:[0,3,7],        n:"m",       d:"minor"},
+  {i:[0,4,7,10],     n:"7",       d:"dominant seventh"},
+  {i:[0,4,7,11],     n:"maj7",    d:"major seventh"},
+  {i:[0,3,7,10],     n:"m7",      d:"minor seventh"},
+  {i:[0,3,6],        n:"°",  d:"diminished"},
+  {i:[0,3,6,10],     n:"m7♭5", d:"half-diminished"},
+  {i:[0,3,6,9],      n:"°7", d:"diminished seventh"},
+  {i:[0,4,8],        n:"+",       d:"augmented"},
+  {i:[0,5,7],        n:"sus4",    d:"suspended fourth"},
+  {i:[0,2,7],        n:"sus2",    d:"suspended second"},
+  {i:[0,7],          n:"5",       d:"power chord"},
+  {i:[0,4,7,9],      n:"6",       d:"major sixth"},
+  {i:[0,3,7,9],      n:"m6",      d:"minor sixth"},
+  {i:[0,3,7,11],     n:"m(maj7)", d:"minor major seventh"},
+  {i:[0,4,8,10],     n:"7♯5", d:"augmented seventh"},
+  {i:[0,4,8,11],     n:"maj7♯5", d:"augmented major seventh"},
+  {i:[0,4,6,10],     n:"7♭5", d:"seventh flat five"},
+  {i:[0,5,7,10],     n:"7sus4",   d:"dominant suspended fourth"},
+  {i:[0,2,4,7],      n:"add9",    d:"added ninth"},
+  {i:[0,2,4,7,10],   n:"9",       d:"dominant ninth"},
+  {i:[0,2,4,7,11],   n:"maj9",    d:"major ninth"},
+  {i:[0,2,3,7,10],   n:"m9",      d:"minor ninth"},
+  {i:[0,1,4,7,10],   n:"7♭9", d:"seventh flat nine"},
+  {i:[0,3,4,7,10],   n:"7♯9", d:"seventh sharp nine"},
+  {i:[0,4,7,9,10],   n:"13",      d:"thirteenth"}
+];
+var INTERVALS = ["unison","minor second","major second","minor third","major third",
+  "perfect fourth","tritone","perfect fifth","minor sixth","major sixth",
+  "minor seventh","major seventh"];
+function pcLabel(pc){
+  for(var i = 0; i < 12; i++){ if(FIFTHS[i].pc === pc) return FIFTHS[i].maj; }
+  return SHARP[pc];
+}
+/* every tertian chord of a scale, as pitch-class sets — used to say what
+   function a held chord has inside each candidate scale */
+function tertianChords(rootPc, iv, sev){
+  var out = [], n = iv.length;
+  if(n !== 7) return out;
+  for(var d = 0; d < 7; d++){
+    var t3 = ((iv[(d+2)%7] - iv[d]) + 12) % 12;
+    var t5 = ((iv[(d+4)%7] - iv[d]) + 12) % 12;
+    var t7 = ((iv[(d+6)%7] - iv[d]) + 12) % 12;
+    var q = null;
+    if(t3 === 4 && t5 === 7) q = sev ? (t7 === 11 ? "maj7" : "dom7") : "maj";
+    else if(t3 === 3 && t5 === 7) q = sev ? (t7 === 11 ? "mMaj7" : "min7") : "min";
+    else if(t3 === 3 && t5 === 6) q = sev ? (t7 === 9 ? "dim7" : "m7b5") : "dim";
+    else if(t3 === 4 && t5 === 8) q = sev ? (t7 === 11 ? "augM7" : "aug7") : "aug";
+    if(!q) continue;
+    var num = ROMAN[d];
+    out.push({
+      rn:(QUAL[q].low ? num.toLowerCase() : num) + RN_SUFFIX[q],
+      pcs:QUAL[q].ints.map(function(x){ return (rootPc + iv[d] + x) % 12; }).sort(function(a,b){ return a-b; }).join(",")
+    });
+  }
+  return out;
+}
+/* name the held notes: try each as the root, prefer the one in the bass */
+function identify(midis){
+  if(!midis.length) return null;
+  var sorted = midis.slice().sort(function(a, b){ return a - b; });
+  var bass = ((sorted[0] % 12) + 12) % 12;
+  var pcs = [];
+  sorted.forEach(function(m){
+    var pc = ((m % 12) + 12) % 12;
+    if(pcs.indexOf(pc) < 0) pcs.push(pc);
+  });
+  if(pcs.length === 1){
+    return sorted.length > 1
+      ? {kind:"interval", text:pcLabel(pcs[0]) + " — octave", pcs:pcs}
+      : {kind:"note", text:pcLabel(pcs[0]), pcs:pcs};
+  }
+  if(pcs.length === 2){
+    /* measured up from the bass — folding to the inversion would call
+       C up to G a fourth */
+    var gap = ((pcs[1] - pcs[0]) + 12) % 12;
+    var name = INTERVALS[gap];
+    var match = null;
+    CHORD_TYPES.forEach(function(t){
+      if(t.i.length !== 2) return;
+      pcs.forEach(function(r){
+        var rel = pcs.map(function(p){ return ((p - r) + 12) % 12; }).sort(function(a,b){ return a-b; });
+        if(rel.join(",") === t.i.join(",")) match = pcLabel(r) + t.n;
+      });
+    });
+    return {kind:"interval", text:(match ? match + " — " : "") + name, pcs:pcs};
+  }
+  var key = function(a){ return a.slice().sort(function(x,y){ return x-y; }).join(","); };
+  var hits = [];
+  pcs.forEach(function(r){
+    var rel = pcs.map(function(p){ return ((p - r) + 12) % 12; });
+    var k = key(rel);
+    for(var t = 0; t < CHORD_TYPES.length; t++){
+      if(key(CHORD_TYPES[t].i) === k){
+        hits.push({ root:r, type:CHORD_TYPES[t], score:(r === bass ? 100 : 0) - t });
+        break;
+      }
+    }
+  });
+  hits.sort(function(a, b){ return b.score - a.score; });
+  if(!hits.length) return {kind:"none", pcs:pcs};
+  var best = hits[0];
+  var sym = pcLabel(best.root) + best.type.n;
+  return {
+    kind:"chord", pcs:pcs, rootPc:best.root, sym:sym,
+    text:sym + (best.root === bass ? "" : "/" + pcLabel(bass)),
+    desc:best.type.d + (best.root === bass ? "" : ", " + pcLabel(bass) + " in the bass"),
+    alts:hits.slice(1, 3).map(function(h){ return pcLabel(h.root) + h.type.n; })
+  };
+}
+/* every root-and-scale pairing whose notes cover everything being held */
+function matchingScales(pcs){
+  var want = pcs.slice().sort(function(a,b){ return a-b; });
+  var heldKey = want.join(",");
+  var out = [];
+  for(var si = 0; si < SCALES.length; si++){
+    var sc = SCALES[si];
+    if(sc.chromatic) continue;
+    var iv = sc.deg.map(parseDeg).map(function(d){ return d.semi; });
+    for(var r = 0; r < 12; r++){
+      var set = {};
+      iv.forEach(function(x){ set[(r + x) % 12] = true; });
+      var covers = want.every(function(p){ return set[p]; });
+      if(!covers) continue;
+      var rn = "";
+      tertianChords(r, iv, want.length >= 4).forEach(function(c){
+        if(c.pcs === heldKey) rn = c.rn;
+      });
+      out.push({rootPc:r, scaleId:sc.id, name:pcLabel(r) + " " + sc.name.replace(/ \(.*\)/, ""), rn:rn, order:si});
+    }
+  }
+  return out;
 }
 
 /* ---------------- circle of fifths ---------------- */
@@ -1883,7 +2113,37 @@ function buildControls(){
   });
   $("#pianoBoard").addEventListener("click", function(e){
     var k = e.target.closest(".pkey"); if(!k) return;
-    playTone(Number(k.getAttribute("data-midi")));
+    var m = Number(k.getAttribute("data-midi"));
+    playTone(m);
+    if(!state.identify) return;
+    var at = state.held.indexOf(m);
+    if(at >= 0) state.held.splice(at, 1); else state.held.push(m);
+    state.showAllHits = false;
+    drawPiano(); drawIdentify();
+  });
+
+  $("#identifyMode").onchange = function(){
+    state.identify = this.checked;
+    if(!state.identify) state.held = [];
+    drawPiano(); drawIdentify();
+  };
+  $("#clearHeld").onclick = function(){
+    state.held = []; state.showAllHits = false;
+    drawPiano(); drawIdentify();
+  };
+  $("#scaleHits").addEventListener("click", function(e){
+    if(e.target.id === "moreHits"){ state.showAllHits = true; drawIdentify(); return; }
+    var b = e.target.closest(".hit"); if(!b) return;
+    state.rootIdx = Number(b.getAttribute("data-root"));
+    state.scaleId = b.getAttribute("data-scale");
+    state.nps = defaultNps(scale());
+    state.pos = 0; step = 0; state.pinned = null;
+    $("#scaleSel").value = state.scaleId;
+    Array.prototype.forEach.call($("#roots").children, function(c){
+      c.setAttribute("aria-pressed", String(Number(c.getAttribute("data-i")) === state.rootIdx));
+    });
+    buildNps();
+    render();
   });
   $("#cof").addEventListener("click", function(e){
     var seg = e.target.closest(".cof-seg"); if(!seg) return;
