@@ -171,6 +171,9 @@ select:hover{border-color:var(--accent)}
 /* in the chord but not in the scale — a borrowed note, and often the whole
    point of the chord (the G# in an E major over A minor) */
 .dot.borrowed{background:rgba(18,15,12,.62); color:#F3EBD9; border-color:#F3EBD9; border-width:2px}
+/* a pitch sent over from the keyboard; red ties it to the keyboard's own marks */
+.dot.piano-only{background:rgba(18,15,12,.7); color:#FFD9D4; border-color:var(--key-mark); border-width:2px}
+.dot.from-piano{box-shadow:0 0 0 2.5px var(--key-mark), 0 0 14px rgba(226,59,46,.65); z-index:5}
 .dot.ghost:hover{border-style:solid; color:var(--dot-tone-ink)}
 .dot.is-playing{box-shadow:0 0 0 3px var(--dot-root), 0 0 16px rgba(216,164,79,.7);
   transform:scale(1.2); z-index:6}
@@ -355,6 +358,8 @@ input[type="range"]::-moz-range-thumb{width:13px; height:13px; border-radius:50%
 .legend .sw-tone{background:#151210; color:var(--dot-tone-ink); border-color:var(--dot-tone)}
 .legend .sw-ghost{border-color:var(--ghost); border-style:dashed; color:var(--ghost-ink)}
 .legend .sw-borrowed{background:#151210; border-color:#F3EBD9; border-width:2px; color:#F3EBD9}
+.legend .sw-piano{background:#151210; border-color:var(--key-mark); border-width:2px; color:#FFD9D4;
+  box-shadow:0 0 0 2px rgba(226,59,46,.35)}
 
 .shape{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:2px}
 .shape li{display:grid; grid-template-columns:52px 1fr auto; gap:10px; align-items:baseline;
@@ -525,6 +530,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
         <li><span class="swatch sw-tone">&#9679;</span> Other tones in this position</li>
         <li><span class="swatch sw-ghost">&#9679;</span> Same scale, other positions</li>
         <li><span class="swatch sw-borrowed">&#9679;</span> In the chord, outside the scale</li>
+        <li><span class="swatch sw-piano">&#9679;</span> Sent over from the keyboard</li>
       </ul>
     </div>
     <div class="panel card">
@@ -544,7 +550,7 @@ footer{font-size:12.5px; color:var(--ink-3); text-align:center; border-top:1px s
     </div>
   </section>
 
-  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 3d8cdfd</span></footer>
+  <footer>Every shape is generated from the interval formula and the open-string pitches, so alternate tunings and seven strings stay correct.<span id="build">build 5f4a4d1</span></footer>
 </div>
 
 <script>
@@ -882,6 +888,15 @@ function center(n){ return ((FP[n - 1] + FP[n]) / 2) * 100; }
 
 /* ---------------- render ---------------- */
 var shape = null, posShapes = [];
+/* pitches the keyboard is showing on the neck: held keys while identifying,
+   plus a short flash for a key you simply tapped */
+var pianoFlash = [], pianoFlashTimer = null;
+function neckFromPiano(){
+  var set = {};
+  if(state.identify) state.held.forEach(function(m){ set[m] = true; });
+  pianoFlash.forEach(function(m){ set[m] = true; });
+  return set;
+}
 function posCount(){
   var sc = scale();
   if(sc.chromatic) return Math.min(13, MAXFRET - state.nps + 2);
@@ -976,7 +991,7 @@ function drawPiano(){
     ? (ord
         ? "Red discs are the chord's voicing, numbered in the order the pattern strikes them. Keys light as they are hit."
         : "Red discs are the chord as it is actually voiced — change the inversion and watch them move.")
-    : "Two octaves. The coloured band under a key gives its scale function. Pick a chord or start a progression to see a voicing.";
+    : "Two octaves. The coloured band under a key gives its scale function. Tap a key to hear it and see that exact pitch on the neck.";
 }
 
 /* ---------------- chords ---------------- */
@@ -1542,6 +1557,8 @@ function drawBoard(){
     });
   }
 
+  var fromPiano = neckFromPiano();
+
   var h = S * ROW, names = "", openCol = "", neck = "", nums = "", row, s, n, f;
 
   for(row = 0; row < S; row++){
@@ -1577,10 +1594,13 @@ function drawBoard(){
       var di = iv.indexOf(rel);
       var hit = inPos[s + ":" + f];
       var isBorrowed = di < 0 && borrowed[pc];
-      if(!hit && !isBorrowed && (di < 0 || !state.showAll)) continue;
+      var isPiano = !!fromPiano[open[s] + f];
+      if(!hit && !isBorrowed && !isPiano && (di < 0 || !state.showAll)) continue;
       var nt = hit || {s:s, f:f, midi:open[s] + f, pc:pc, degIdx:di, deg:degs[di], finger:0, order:-1};
-      var cls = hit ? "dot " + tierOf(nt) : (isBorrowed ? "dot borrowed" : "dot ghost");
-      var lbl = isBorrowed
+      var cls = hit ? "dot " + tierOf(nt)
+                    : (isBorrowed ? "dot borrowed" : (di < 0 ? "dot piano-only" : "dot ghost"));
+      if(isPiano) cls += " from-piano";
+      var lbl = (isBorrowed || (isPiano && di < 0))
         ? (state.labels === "none" || state.labels === "finger" ? "" : SHARP[pc])
         : labelFor(nt, !hit);
       var title = (nt.deg ? spell(nt.deg) + " · degree " + nt.deg.label
@@ -2115,21 +2135,33 @@ function buildControls(){
     var k = e.target.closest(".pkey"); if(!k) return;
     var m = Number(k.getAttribute("data-midi"));
     playTone(m);
-    if(!state.identify) return;
-    var at = state.held.indexOf(m);
-    if(at >= 0) state.held.splice(at, 1); else state.held.push(m);
-    state.showAllHits = false;
-    drawPiano(); drawIdentify();
+    if(state.identify){
+      var at = state.held.indexOf(m);
+      if(at >= 0) state.held.splice(at, 1); else state.held.push(m);
+      state.showAllHits = false;
+      pianoFlash = [];
+      drawPiano(); drawIdentify(); drawBoard(); applyMarks();
+      return;
+    }
+    /* not identifying — show the note on the neck briefly, then let it go */
+    pianoFlash = [m];
+    if(pianoFlashTimer) clearTimeout(pianoFlashTimer);
+    drawBoard(); applyMarks();
+    pianoFlashTimer = setTimeout(function(){
+      pianoFlash = []; pianoFlashTimer = null;
+      drawBoard(); applyMarks();
+    }, 2000);
   });
 
   $("#identifyMode").onchange = function(){
     state.identify = this.checked;
     if(!state.identify) state.held = [];
-    drawPiano(); drawIdentify();
+    pianoFlash = [];
+    drawPiano(); drawIdentify(); drawBoard(); applyMarks();
   };
   $("#clearHeld").onclick = function(){
     state.held = []; state.showAllHits = false;
-    drawPiano(); drawIdentify();
+    drawPiano(); drawIdentify(); drawBoard(); applyMarks();
   };
   $("#scaleHits").addEventListener("click", function(e){
     if(e.target.id === "moreHits"){ state.showAllHits = true; drawIdentify(); return; }

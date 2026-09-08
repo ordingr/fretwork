@@ -16,6 +16,8 @@ One self-contained HTML file. No build step, no dependencies, no backend.
 
 **Identify** — the whole thing in reverse. Turn on *Hold keys to identify* and press keys down on the keyboard: it names the chord, including slash chords when the bass is not the root (E–G–C reads as C/E), and lists every scale in the library that contains those notes. Each result carries the chord's **Roman numeral in that scale**, so a G7 shows as I7 in G mixolydian, V7 in C major, IV7 in D dorian and VI7 in B locrian — which is the same chord doing four different jobs. Click any result to load that scale and see all of its chords.
 
+**The two instruments are linked both ways.** Tapping a key shows that *exact pitch* everywhere it lives on the neck — middle C turns up in five places — ringed in the same red the keyboard uses, and notes outside the loaded scale still appear. While you are holding keys, every held pitch stays lit on the neck. Running the scale player the other way lights the matching key as each note sounds.
+
 **Circle of fifths** — the scale's notes are highlighted in place, so you can see that a major scale is seven *adjacent* slices of the circle and that harmonic minor isn't. Reports the key signature, derived from the scale's own spelling. Click either ring to jump key.
 
 **Chords** — the seven chords the current scale generates, stacked in thirds through the scale itself, as triads or sevenths with Roman numerals. Every mode gets its own set, and it stays correct in the awkward corners: A harmonic minor yields Am(maj7), Bm7♭5, Cmaj7♯5, Dm7, E7, Fmaj7, G♯°7. Click a chord to hear it and light its tones on the neck.
